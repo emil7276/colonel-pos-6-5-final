@@ -127,11 +127,11 @@ Future<List<int>> _escPosReceipt(SaleModel sale, {required String paper, int cop
 
   for (var copy = 0; copy < copies; copy++) {
     bytes.addAll(generator.reset());
-    bytes.addAll(generator.text(name, styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2)));
-    if (address.isNotEmpty) bytes.addAll(generator.text(address, styles: const PosStyles(align: PosAlign.center)));
-    if (phone.isNotEmpty) bytes.addAll(generator.text(phone, styles: const PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text(name, styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2)));
+    if (address.isNotEmpty) bytes.addAll(generator.text(address, styles: PosStyles(align: PosAlign.center)));
+    if (phone.isNotEmpty) bytes.addAll(generator.text(phone, styles: PosStyles(align: PosAlign.center)));
     bytes.addAll(generator.feed(1));
-    bytes.addAll(generator.text('NOTA PENJUALAN', styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text('NOTA PENJUALAN', styles: PosStyles(align: PosAlign.center, bold: true)));
     bytes.addAll(generator.hr());
     bytes.addAll(generator.text('${sale.no}\n${sale.time}\nKasir: ${sale.cashier}'));
     bytes.addAll(generator.feed(1));
@@ -141,32 +141,32 @@ Future<List<int>> _escPosReceipt(SaleModel sale, {required String paper, int cop
       final amount = rp((item['price'] as int) * (item['qty'] as int));
       bytes.addAll(generator.row([
         PosColumn(text: itemName, width: 8),
-        PosColumn(text: amount, width: 4, styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(text: amount, width: 4, styles: PosStyles(align: PosAlign.right)),
       ]));
     }
 
     bytes.addAll(generator.hr());
     bytes.addAll(generator.row([
       const PosColumn(text: 'Subtotal', width: 7),
-      PosColumn(text: rp(sale.subtotal), width: 5, styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(text: rp(sale.subtotal), width: 5, styles: PosStyles(align: PosAlign.right)),
     ]));
     bytes.addAll(generator.row([
       const PosColumn(text: 'Diskon', width: 7),
-      PosColumn(text: rp(sale.discount), width: 5, styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(text: rp(sale.discount), width: 5, styles: PosStyles(align: PosAlign.right)),
     ]));
     bytes.addAll(generator.row([
       const PosColumn(text: 'TOTAL', width: 7, styles: PosStyles(bold: true)),
-      PosColumn(text: rp(sale.total), width: 5, styles: const PosStyles(align: PosAlign.right, bold: true)),
+      PosColumn(text: rp(sale.total), width: 5, styles: PosStyles(align: PosAlign.right, bold: true)),
     ]));
     bytes.addAll(generator.feed(1));
-    bytes.addAll(generator.text('Pembayaran: ${sale.payment}', styles: const PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text('Pembayaran: ${sale.payment}', styles: PosStyles(align: PosAlign.center)));
     if (sale.payment == 'Tunai') {
-      bytes.addAll(generator.text('Tunai: ${rp(sale.cash)}', styles: const PosStyles(align: PosAlign.center)));
-      bytes.addAll(generator.text('Kembalian: ${rp(sale.change)}', styles: const PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text('Tunai: ${rp(sale.cash)}', styles: PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text('Kembalian: ${rp(sale.change)}', styles: PosStyles(align: PosAlign.center)));
     }
     bytes.addAll(generator.feed(2));
-    bytes.addAll(generator.text('Terima kasih', styles: const PosStyles(align: PosAlign.center, bold: true)));
-    bytes.addAll(generator.text('CP Colonel POS V6.5', styles: const PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text('Terima kasih', styles: PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text('CP Colonel POS V6.5', styles: PosStyles(align: PosAlign.center)));
     bytes.addAll(generator.feed(2));
     bytes.addAll(generator.cut());
   }
@@ -210,11 +210,11 @@ Future<void> testPrinterReceipt() async {
     final generator = Generator(paper == '80 mm' ? PaperSize.mm80 : PaperSize.mm58, profile);
     final bytes = <int>[];
     bytes.addAll(generator.reset());
-    bytes.addAll(generator.text('CP POS', styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2)));
-    bytes.addAll(generator.text('TEST PRINT', styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text('CP POS', styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2)));
+    bytes.addAll(generator.text('TEST PRINT', styles: PosStyles(align: PosAlign.center, bold: true)));
     bytes.addAll(generator.hr());
-    bytes.addAll(generator.text('Printer Bluetooth siap digunakan.', styles: const PosStyles(align: PosAlign.center)));
-    bytes.addAll(generator.text('Kertas: $paper', styles: const PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text('Printer Bluetooth siap digunakan.', styles: PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text('Kertas: $paper', styles: PosStyles(align: PosAlign.center)));
     bytes.addAll(generator.feed(3));
     bytes.addAll(generator.cut());
     final sent = await PrintBluetoothThermal.writeBytes(bytes);
