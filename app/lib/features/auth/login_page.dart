@@ -4,7 +4,7 @@ import '../../core/constants.dart';
 import '../../core/utils.dart';
 import '../../core/widgets.dart';
 import '../../data/database.dart';
-import '../../models/models.dart';
+import '../home/home_page.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -61,73 +61,84 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints:
-                const BoxConstraints(maxWidth: 420),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.restaurant,
-                      size: 70,
-                      color: red,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFF1F1), bg],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(22),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Column(
+                children: [
+                  const CpLogo(size: 118),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'CP POS',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: .5,
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'COLONEL FRIED CHICKEN',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Professional Point of Sale • V6.5',
+                    style: TextStyle(color: inkMuted, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 22),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        children: [
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Masuk ke sistem',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: user,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Username',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: pass,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: Icon(Icons.lock_outline),
+                            ),
+                            onSubmitted: (_) => login(),
+                          ),
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: login,
+                              icon: const Icon(Icons.login_rounded),
+                              label: const Text('MASUK'),
+                            ),
+                          ),
+                        ],
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const Text('POS V6.5 • Professional'),
-                    const SizedBox(height: 25),
-                    TextField(
-                      controller: user,
-                      decoration:
-                          const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon:
-                            Icon(Icons.person),
-                        border:
-                            OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: pass,
-                      obscureText: true,
-                      decoration:
-                          const InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon:
-                            Icon(Icons.lock),
-                        border:
-                            OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => login(),
-                    ),
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: login,
-                        style:
-                            FilledButton.styleFrom(
-                          backgroundColor: red,
-                        ),
-                        child:
-                            const Text('MASUK'),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  const CopyrightFooter(),
+                ],
               ),
             ),
           ),

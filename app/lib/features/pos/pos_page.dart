@@ -410,6 +410,10 @@ class PosPageState extends State<PosPage> {
           rows.first,
         );
 
+        if (await printerAutoPrint()) {
+          await printReceipt(sale);
+        }
+
         await showDialog(
           context: context,
           builder: (_) =>
@@ -486,6 +490,22 @@ class PosPageState extends State<PosPage> {
         final productGrid =
             Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  const CpLogo(size: 38),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Pilih Menu',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  Text('${filtered.length} menu', style: const TextStyle(color: inkMuted, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
             SizedBox(
               height: 52,
               child: ListView(
@@ -540,6 +560,7 @@ class PosPageState extends State<PosPage> {
                       filtered[i];
 
                   return Card(
+                    clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () =>
                           add(p),
@@ -555,11 +576,14 @@ class PosPageState extends State<PosPage> {
                               MainAxisAlignment
                                   .center,
                           children: [
-                            const Icon(
-                              Icons
-                                  .fastfood,
-                              size: 34,
-                              color: red,
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: redSoft,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(Icons.fastfood_rounded, size: 28, color: red),
                             ),
                             const SizedBox(
                               height: 6,
@@ -606,15 +630,15 @@ class PosPageState extends State<PosPage> {
           child: Column(
             children: [
               const ListTile(
-                leading:
-                    Icon(Icons.shopping_cart),
+                contentPadding: EdgeInsets.symmetric(horizontal: 14),
+                leading: CircleAvatar(
+                  backgroundColor: redSoft,
+                  foregroundColor: red,
+                  child: Icon(Icons.shopping_cart_rounded),
+                ),
                 title: Text(
                   'Keranjang',
-                  style:
-                      TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
               Expanded(

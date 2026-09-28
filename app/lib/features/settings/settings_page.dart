@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
-import '../../core/utils.dart';
 import '../../core/widgets.dart';
-import '../../data/database.dart';
-import '../../models/models.dart';
 import 'store_page.dart';
 import 'menu_page.dart';
 import 'stock_page.dart';
 import 'users_page.dart';
 import 'qris_page.dart';
 import 'backup_page.dart';
+import 'printer_page.dart';
 class SettingsPage
     extends StatelessWidget {
   final String username;
@@ -57,8 +55,14 @@ class SettingsPage
         ),
         settingsTile(
           context,
+          'Printer',
+          Icons.print_outlined,
+          const PrinterPage(),
+        ),
+        settingsTile(
+          context,
           'Backup',
-          Icons.backup,
+          Icons.backup_outlined,
           const BackupPage(),
         ),
         const CopyrightFooter(),
