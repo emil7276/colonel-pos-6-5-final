@@ -393,3 +393,50 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 }
+
+class _DonutPainter extends CustomPainter {
+  final List<int> values;
+
+  _DonutPainter({required this.values});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = values.fold<int>(0, (a, b) => a + b);
+    if (total <= 0) return;
+
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    final stroke = radius * .28;
+
+    final rect = Rect.fromCircle(
+      center: center,
+      radius: radius - stroke / 2,
+    );
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+
+    const colors = [
+      red,
+      navy,
+      Color(0xFF2E7D32),
+      Color(0xFFF59E0B),
+      Color(0xFF7C3AED),
+    ];
+
+    var start = -1.5708;
+
+    for (var i = 0; i < values.length; i++) {
+      final sweep = 6.283185307 * values[i] / total;
+      paint.color = colors[i % colors.length];
+      canvas.drawArc(rect, start, sweep, false, paint);
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) {
+    return true;
+  }
+}
