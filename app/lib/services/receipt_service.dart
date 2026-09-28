@@ -147,15 +147,15 @@ Future<List<int>> _escPosReceipt(SaleModel sale, {required String paper, int cop
 
     bytes.addAll(generator.hr());
     bytes.addAll(generator.row([
-      const PosColumn(text: 'Subtotal', width: 7),
+      PosColumn(text: 'Subtotal', width: 7),
       PosColumn(text: rp(sale.subtotal), width: 5, styles: PosStyles(align: PosAlign.right)),
     ]));
     bytes.addAll(generator.row([
-      const PosColumn(text: 'Diskon', width: 7),
+      PosColumn(text: 'Diskon', width: 7),
       PosColumn(text: rp(sale.discount), width: 5, styles: PosStyles(align: PosAlign.right)),
     ]));
     bytes.addAll(generator.row([
-      const PosColumn(text: 'TOTAL', width: 7, styles: PosStyles(bold: true)),
+      PosColumn(text: 'TOTAL', width: 7, styles: PosStyles(bold: true)),
       PosColumn(text: rp(sale.total), width: 5, styles: PosStyles(align: PosAlign.right, bold: true)),
     ]));
     bytes.addAll(generator.feed(1));
