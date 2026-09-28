@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../core/utils.dart';
-import '../../core/widgets.dart';
 import '../../data/database.dart';
 import '../../models/models.dart';
-class MenuPage
-    extends StatefulWidget {
+
+class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
 
   @override
-  State<MenuPage> createState() =>
-      _MenuPageState();
+  State<MenuPage> createState() => _MenuPageState();
 }
-class _MenuPageState
-    extends State<MenuPage> {
+
+class _MenuPageState extends State<MenuPage> {
   List<Product> products = [];
+  String filterCategory = 'Semua';
 
   @override
   void initState() {
@@ -23,279 +22,276 @@ class _MenuPageState
   }
 
   Future<void> load() async {
-    final raw =
-        await DB.products();
-
-    if (!mounted) return;
-
-    setState(() {
-      products = raw
-          .map(Product.fromMap)
-          .toList();
-    });
+    try {
+      final raw = await DB.products();
+      if (!mounted) return;
+      setState(() {
+        products = raw.map(Product.fromMap).toList();
+        if (!categories.contains(filterCategory)) filterCategory = 'Semua';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memuat menu: $e')));
+    }
   }
 
-  Future<void> edit([
-    Product? p,
-  ]) async {
-    final n =
-        TextEditingController(
-      text: p?.name ?? '',
-    );
+  List<String> get categories {
+    final result = <String>{'Semua'};
+    result.addAll(products.map((p) => p.category.trim()).where((x) => x.isNotEmpty));
+    return result.toList();
+  }
 
-    final c =
-        TextEditingController(
-      text:
-          p?.category ?? 'Ayam',
-    );
-
-    final pr =
-        TextEditingController(
-      text:
-          p?.price.toString() ?? '',
-    );
-
-    final st =
-        TextEditingController(
-      text:
-          p?.stock.toString() ?? '0',
-    );
-
-    bool active =
-        p?.active ?? true;
-
-    await showDialog(
+  Future<String?> _newCategoryDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
       context: context,
-      builder: (_) =>
-          StatefulBuilder(
-        builder: (
-          context,
-          setDialog,
-        ) =>
-            AlertDialog(
-          title: Text(
-            p == null
-                ? 'Tambah Menu'
-                : 'Edit Menu',
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Kategori Baru'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            labelText: 'Nama kategori',
+            hintText: 'Contoh: Paket, Snack, Minuman',
           ),
-          content:
-              SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: n,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Nama',
-                  ),
-                ),
-                TextField(
-                  controller: c,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Kategori',
-                  ),
-                ),
-                TextField(
-                  controller: pr,
-                  keyboardType:
-                      TextInputType
-                          .number,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Harga',
-                  ),
-                ),
-                TextField(
-                  controller: st,
-                  keyboardType:
-                      TextInputType
-                          .number,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Stok awal',
-                  ),
-                ),
-                SwitchListTile(
-                  value: active,
-                  onChanged: (v) {
-                    setDialog(
-                      () =>
-                          active = v,
-                    );
-                  },
-                  title:
-                      const Text(
-                    'Aktif',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(
-                context,
-              ),
-              child:
-                  const Text(
-                'Batal',
-              ),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  await DB.saveProduct(
-                    id: p?.id,
-                    name:
-                        n.text.trim(),
-                    category:
-                        c.text.trim(),
-                    price:
-                        int.tryParse(
-                              pr.text,
-                            ) ??
-                            0,
-                    stock:
-                        int.tryParse(
-                              st.text,
-                            ) ??
-                            0,
-                    active: active,
-                  );
-
-                  if (context
-                      .mounted) {
-                    Navigator.pop(
-                      context,
-                    );
-                  }
-                } catch (e) {
-                  if (context
-                      .mounted) {
-                    ScaffoldMessenger
-                            .of(context)
-                        .showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Gagal menyimpan menu: '
-                          '$e',
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
-              child:
-                  const Text(
-                'Simpan',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    await load();
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Menu & Harga',
         ),
         actions: [
-          IconButton(
-            onPressed: () => edit(),
-            icon: const Icon(
-              Icons.add,
-            ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isEmpty) return;
+              Navigator.pop(dialogContext, name);
+            },
+            child: const Text('Gunakan'),
           ),
         ],
       ),
-      body: ListView(
-        padding:
-            const EdgeInsets.all(10),
-        children:
-            products.map((p) {
-          return Card(
-            child: ListTile(
-              leading:
-                  const Icon(
-                Icons.fastfood,
-                color: red,
-              ),
-              title: Text(p.name),
-              subtitle: Text(
-                '${p.category} • '
-                '${rp(p.price)} • '
-                'Stok ${p.stock}',
-              ),
-              trailing: Row(
-                mainAxisSize:
-                    MainAxisSize.min,
+    );
+    controller.dispose();
+    return value;
+  }
+
+  Future<void> edit([Product? p]) async {
+    final nameController = TextEditingController(text: p?.name ?? '');
+    final priceController = TextEditingController(text: p?.price.toString() ?? '');
+    final stockController = TextEditingController(text: p?.stock.toString() ?? '0');
+    final availableCategories = categories.where((x) => x != 'Semua').toList();
+    String selectedCategory = p?.category ?? (availableCategories.isNotEmpty ? availableCategories.first : 'Ayam');
+    if (!availableCategories.contains(selectedCategory)) availableCategories.add(selectedCategory);
+    bool active = p?.active ?? true;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialog) {
+          return AlertDialog(
+            title: Text(p == null ? 'Tambah Menu' : 'Edit Menu'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Switch(
-                    value:
-                        p.active,
-                    onChanged:
-                        (v) async {
-                      try {
-                        await DB
-                            .saveProduct(
-                          id: p.id,
-                          name:
-                              p.name,
-                          category:
-                              p.category,
-                          price:
-                              p.price,
-                          stock:
-                              p.stock,
-                          active: v,
-                        );
-
-                        await load();
-                      } catch (e) {
-                        if (!mounted)
-                          return;
-
-                        ScaffoldMessenger
-                                .of(
-                          context,
-                        ).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text(
-                              'Gagal: $e',
-                            ),
-                          ),
-                        );
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Nama menu'),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: availableCategories.contains(selectedCategory) ? selectedCategory : null,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Kategori'),
+                    items: [
+                      ...availableCategories.map((category) => DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category, overflow: TextOverflow.ellipsis),
+                          )),
+                      const DropdownMenuItem<String>(
+                        value: '__new__',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_circle_outline, color: red, size: 20),
+                            SizedBox(width: 8),
+                            Text('Buat kategori baru', style: TextStyle(color: red, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) async {
+                      if (value == '__new__') {
+                        final created = await _newCategoryDialog(context);
+                        if (created != null && created.trim().isNotEmpty) {
+                          final name = created.trim();
+                          if (!availableCategories.contains(name)) availableCategories.add(name);
+                          setDialog(() => selectedCategory = name);
+                        }
+                      } else if (value != null) {
+                        setDialog(() => selectedCategory = value);
                       }
                     },
                   ),
-                  IconButton(
-                    onPressed: () =>
-                        edit(p),
-                    icon:
-                        const Icon(
-                      Icons.edit,
-                    ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Harga'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: stockController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Stok awal'),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: active,
+                    onChanged: (v) => setDialog(() => active = v),
+                    title: const Text('Aktif'),
                   ),
                 ],
               ),
             ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+              FilledButton(
+                onPressed: () async {
+                  try {
+                    await DB.saveProduct(
+                      id: p?.id,
+                      name: nameController.text.trim(),
+                      category: selectedCategory.trim(),
+                      price: int.tryParse(priceController.text) ?? 0,
+                      stock: int.tryParse(stockController.text) ?? 0,
+                      active: active,
+                    );
+                    if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  } catch (e) {
+                    if (!dialogContext.mounted) return;
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text('Gagal menyimpan menu: $e')));
+                  }
+                },
+                child: const Text('Simpan'),
+              ),
+            ],
           );
-        }).toList(),
+        },
+      ),
+    );
+
+    nameController.dispose();
+    priceController.dispose();
+    stockController.dispose();
+    await load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = filterCategory == 'Semua'
+        ? products
+        : products.where((p) => p.category == filterCategory).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Menu & Harga'),
+        actions: [
+          IconButton(onPressed: () => edit(), tooltip: 'Tambah menu', icon: const Icon(Icons.add_rounded)),
+        ],
+      ),
+      body: Column(
+        children: [
+          SizedBox(
+            height: 50,
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 7),
+              itemBuilder: (_, i) {
+                final category = categories[i];
+                final selected = filterCategory == category;
+                return InkWell(
+                  borderRadius: BorderRadius.circular(13),
+                  onTap: () => setState(() => filterCategory = category),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: selected ? red : Colors.white,
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(color: selected ? red : line),
+                    ),
+                    child: Text(
+                      category,
+                      style: TextStyle(
+                        color: selected ? Colors.white : ink,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: load,
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(12, 2, 12, 24),
+                itemCount: filtered.length,
+                itemBuilder: (_, i) {
+                  final p = filtered[i];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 7, 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(color: redSoft, borderRadius: BorderRadius.circular(13)),
+                            child: const Icon(Icons.fastfood_rounded, color: red, size: 22),
+                          ),
+                          const SizedBox(width: 11),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                const SizedBox(height: 3),
+                                Text('${p.category}  •  ${rp(p.price)}  •  Stok ${p.stock}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: inkMuted, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: p.active,
+                            onChanged: (v) async {
+                              try {
+                                await DB.saveProduct(id: p.id, name: p.name, category: p.category, price: p.price, stock: p.stock, active: v);
+                                await load();
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+                              }
+                            },
+                          ),
+                          IconButton(onPressed: () => edit(p), tooltip: 'Edit', icon: const Icon(Icons.edit_rounded)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: red,
+        foregroundColor: Colors.white,
+        onPressed: () => edit(),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Tambah Menu'),
       ),
     );
   }

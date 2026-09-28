@@ -19,8 +19,19 @@ class ColonelApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: scheme,
         scaffoldBackgroundColor: bg,
-        fontFamily: 'Roboto',
+        fontFamily: 'sans-serif-condensed',
         visualDensity: VisualDensity.standard,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(fontWeight: FontWeight.w500),
+          bodyMedium: TextStyle(fontWeight: FontWeight.w500),
+          bodySmall: TextStyle(fontWeight: FontWeight.w500),
+          titleLarge: TextStyle(fontWeight: FontWeight.w800),
+          titleMedium: TextStyle(fontWeight: FontWeight.w800),
+          titleSmall: TextStyle(fontWeight: FontWeight.w700),
+          labelLarge: TextStyle(fontWeight: FontWeight.w700),
+          labelMedium: TextStyle(fontWeight: FontWeight.w700),
+          labelSmall: TextStyle(fontWeight: FontWeight.w700),
+        ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: ink,
@@ -106,7 +117,7 @@ class ColonelApp extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w700, color: ink),
         ),
         dividerTheme: const DividerThemeData(
           color: line,

@@ -471,27 +471,19 @@ class PosPageState extends State<PosPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered =
-        category == 'Semua'
-            ? products
-            : products
-                .where(
-                  (p) =>
-                      p.category ==
-                      category,
-                )
-                .toList();
+    final filtered = category == 'Semua'
+        ? products
+        : products.where((p) => p.category == category).toList();
 
     return LayoutBuilder(
       builder: (context, c) {
-        final tablet =
-            c.maxWidth >= 700;
+        final tablet = c.maxWidth >= 700;
+        final columns = tablet ? 4 : 2;
 
-        final productGrid =
-            Column(
+        final productGrid = Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.fromLTRB(4, 2, 4, 7),
               child: Row(
                 children: [
                   const Expanded(
@@ -500,117 +492,107 @@ class PosPageState extends State<PosPage> {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                     ),
                   ),
-                  Text('${filtered.length} menu', style: const TextStyle(color: inkMuted, fontWeight: FontWeight.w600)),
+                  Text(
+                    '${filtered.length} menu',
+                    style: const TextStyle(color: inkMuted, fontWeight: FontWeight.w700),
+                  ),
                 ],
               ),
             ),
             SizedBox(
-              height: 52,
-              child: ListView(
-                scrollDirection:
-                    Axis.horizontal,
-                children:
-                    categories.map((x) {
-                  return Padding(
-                    padding:
-                        const EdgeInsets
-                            .only(
-                      right: 8,
-                    ),
-                    child: ChoiceChip(
-                      label: Text(x),
-                      selected:
-                          category == x,
-                      onSelected: (_) {
-                        setState(
-                          () =>
-                              category = x,
-                        );
-                      },
+              height: 46,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 7),
+                itemBuilder: (_, i) {
+                  final x = categories[i];
+                  final selected = category == x;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(13),
+                    onTap: () => setState(() => category = x),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: selected ? red : Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: selected ? red : line),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (selected) ...[
+                            const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                            const SizedBox(width: 5),
+                          ],
+                          Text(
+                            x,
+                            style: TextStyle(
+                              color: selected ? Colors.white : ink,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
+            const SizedBox(height: 7),
             Expanded(
-              child:
-                  GridView.builder(
-                padding:
-                    const EdgeInsets
-                        .only(
-                  bottom: 20,
-                ),
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      tablet ? 4 : 2,
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio:
-                      tablet
-                          ? 1.28
-                          : 1.08,
+                  childAspectRatio: tablet ? 1.55 : 1.32,
                 ),
-                itemCount:
-                    filtered.length,
+                itemCount: filtered.length,
                 itemBuilder: (_, i) {
-                  final p =
-                      filtered[i];
-
+                  final p = filtered[i];
                   return Card(
+                    color: Colors.white,
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
-                      onTap: () =>
-                          add(p),
-                      child:
-                          Padding(
-                        padding:
-                            const EdgeInsets
-                                .all(
-                          7,
-                        ),
+                      onTap: () => add(p),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                         child: Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment
-                                  .center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              width: 42,
-                              height: 42,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 color: redSoft,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.fastfood_rounded, size: 22, color: red),
+                              child: const Icon(Icons.fastfood_rounded, size: 19, color: red),
                             ),
-                            const SizedBox(
-                              height: 3,
-                            ),
+                            const SizedBox(height: 5),
                             Text(
                               p.name,
-                              textAlign:
-                                  TextAlign
-                                      .center,
-                              style:
-                                  const TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .bold,
-                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               rp(p.price),
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                             ),
                             Text(
                               'Stok ${p.stock}',
-                              style:
-                                  TextStyle(
-                                color: p.stock <=
-                                        0
-                                    ? Colors
-                                        .red
-                                    : Colors
-                                        .green,
+                              style: TextStyle(
+                                color: p.stock <= 0 ? red : Colors.green.shade700,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -625,183 +607,85 @@ class PosPageState extends State<PosPage> {
         );
 
         final cartPanel = Card(
+          color: Colors.white,
           child: Column(
             children: [
               const ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                leading: Icon(Icons.shopping_cart_rounded, color: red, size: 21),
-                title: Text('Keranjang', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                leading: Icon(Icons.shopping_cart_rounded, color: red, size: 20),
+                title: Text('Keranjang', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
               ),
               Expanded(
                 child: cart.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Belum ada item',
-                        ),
-                      )
-                    : ListView(
-                        children:
-                            cart.map(
-                          (line) {
-                            return ListTile(
-                              dense: true,
-                              visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-                              title: Text(
-                                line.product
-                                    .name,
-                              ),
-                              subtitle:
-                                  Text(
-                                rp(line
-                                    .product
-                                    .price),
-                              ),
-                              leading: Row(
-                                mainAxisSize:
-                                    MainAxisSize
-                                        .min,
-                                children: [
-                                  IconButton(
-                                    onPressed:
-                                        () =>
-                                            minus(
-                                      line,
-                                    ),
-                                    icon:
-                                        const Icon(
-                                      Icons
-                                          .remove_circle,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${line.qty}',
-                                  ),
-                                  IconButton(
-                                    onPressed:
-                                        () =>
-                                            add(
-                                      line
-                                          .product,
-                                    ),
-                                    icon:
-                                        const Icon(
-                                      Icons
-                                          .add_circle,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing:
-                                  Text(
-                                rp(
-                                  line.product
-                                          .price *
-                                      line.qty,
+                    ? const Center(child: Text('Belum ada item'))
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: cart.length,
+                        itemBuilder: (_, i) {
+                          final line = cart[i];
+                          return ListTile(
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                            title: Text(
+                              line.product.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
+                            subtitle: Text(rp(line.product.price), style: const TextStyle(fontSize: 11)),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                  onPressed: () => minus(line),
+                                  icon: const Icon(Icons.remove_circle_outline, size: 21),
                                 ),
-                              ),
-                            );
-                          },
-                        ).toList(),
+                                Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                  onPressed: () => add(line.product),
+                                  icon: const Icon(Icons.add_circle_outline, size: 21),
+                                ),
+                              ],
+                            ),
+                            trailing: Text(
+                              rp(line.product.price * line.qty),
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                            ),
+                          );
+                        },
                       ),
               ),
-              const Divider(),
+              const Divider(height: 1),
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(10, 6, 10, 8),
+                padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
                 child: Column(
                   children: [
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), Text(rp(subtotal))]),
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Diskon'), Text(rp(discount))]),
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Subtotal',
-                        ),
-                        Text(
-                          rp(subtotal),
-                        ),
+                        const Text('TOTAL', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+                        Text(rp(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: red)),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
-                      children: [
-                        const Text(
-                          'Diskon',
-                        ),
-                        Text(
-                          rp(discount),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
-                      children: [
-                        const Text(
-                          'TOTAL',
-                          style:
-                              TextStyle(
-                            fontWeight:
-                                FontWeight
-                                    .bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          rp(total),
-                          style:
-                              const TextStyle(
-                            fontWeight:
-                                FontWeight
-                                    .bold,
-                            fontSize: 18,
-                            color: red,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 7),
                     Row(
                       children: [
-                        Expanded(
-                          child:
-                              OutlinedButton(
-                            onPressed:
-                                discountDialog,
-                            child:
-                                const Text(
-                              'Diskon',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 8,
-                        ),
+                        Expanded(child: OutlinedButton(onPressed: discountDialog, child: const Text('Diskon'))),
+                        const SizedBox(width: 7),
                         Expanded(
                           flex: 2,
-                          child:
-                              FilledButton(
-                            onPressed:
-                                cart.isEmpty
-                                    ? null
-                                    : payment,
-                            style:
-                                FilledButton
-                                    .styleFrom(
-                              backgroundColor:
-                                  red,
-                            ),
-                            child:
-                                const Text(
-                              'BAYAR',
-                            ),
+                          child: FilledButton(
+                            onPressed: cart.isEmpty ? null : payment,
+                            child: const Text('BAYAR'),
                           ),
                         ),
                       ],
@@ -815,39 +699,25 @@ class PosPageState extends State<PosPage> {
 
         if (tablet) {
           return Padding(
-            padding:
-                const EdgeInsets.all(
-              12,
-            ),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Row(
               children: [
-                Expanded(
-                  flex: 6,
-                  child: productGrid,
-                ),
-                const SizedBox(
-                  width: 12,
-                ),
-                Expanded(
-                  flex: 4,
-                  child: cartPanel,
-                ),
+                Expanded(flex: 7, child: productGrid),
+                const SizedBox(width: 10),
+                Expanded(flex: 3, child: cartPanel),
               ],
             ),
           );
         }
 
-        return Column(
-          children: [
-            Expanded(
-              flex: 6,
-              child: productGrid,
-            ),
-            SizedBox(
-              height: 315,
-              child: cartPanel,
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+          child: Column(
+            children: [
+              Expanded(flex: 7, child: productGrid),
+              SizedBox(height: cart.isEmpty ? 175 : 235, child: cartPanel),
+            ],
+          ),
         );
       },
     );
