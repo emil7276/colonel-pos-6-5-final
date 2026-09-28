@@ -156,63 +156,69 @@ class _HomePageState extends State<HomePage> {
                     children: pages,
                   ),
                 ),
-                if (_quote != null)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    right: 8,
-                    child: Dismissible(
-                      key: ValueKey(_quote),
-                      direction: DismissDirection.horizontal,
-                      onDismissed: (_) => hideQuote(),
-                      child: Material(
-                        elevation: 7,
-                        borderRadius: BorderRadius.circular(14),
-                        color: red,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 13, 8, 13),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 1),
-                                child: Icon(
-                                  Icons.format_quote_rounded,
+            if (_quote != null)
+              Positioned(
+                top: 8,
+                left: 8,
+                right: 8,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: -1.0, end: 0.0),
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(0, value * 100),
+                      child: child,
+                    );
+                  },
+                  child: Dismissible(
+                    key: ValueKey(_quote),
+                    direction: DismissDirection.vertical,
+                    onDismissed: (_) => hideQuote(),
+                    child: Material(
+                      elevation: 7,
+                      borderRadius: BorderRadius.circular(14),
+                      color: red,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 13, 8, 13),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 1),
+                              child: Icon(
+                                Icons.format_quote_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                _quote!,
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  size: 22,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.35,
                                 ),
                               ),
-                              const SizedBox(width: 9),
-                              Expanded(
-                                child: Text(
-                                  _quote!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.35,
-                                  ),
-                                ),
+                            ),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: hideQuote,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
                               ),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                onPressed: hideQuote,
-                                icon: const Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                ),
+              ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: selectPage,
