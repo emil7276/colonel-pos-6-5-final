@@ -38,7 +38,7 @@ jobs:
 
       - name: Analyze
         working-directory: app
-        run: dart analyze lib --no-fatal-infos --no-fatal-warnings
+        run: dart analyze lib --no-fatal-warnings
 
       - name: Build APK
         working-directory: app
