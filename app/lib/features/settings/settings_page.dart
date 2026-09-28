@@ -8,7 +8,6 @@ import 'users_page.dart';
 import 'qris_page.dart';
 import 'backup_page.dart';
 import 'printer_page.dart';
-import 'finance_page.dart';
 class SettingsPage
     extends StatelessWidget {
   final String username;
@@ -53,12 +52,6 @@ class SettingsPage
           'QRIS',
           Icons.qr_code_2,
           const QrisPage(),
-        ),
-        settingsTile(
-          context,
-          'Keuangan',
-          Icons.account_balance_wallet_outlined,
-          const FinancePage(),
         ),
         settingsTile(
           context,

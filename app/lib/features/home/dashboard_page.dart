@@ -4,6 +4,7 @@ import '../../core/utils.dart';
 import '../../core/widgets.dart';
 import '../../data/database.dart';
 import '../../models/models.dart';
+import '../settings/finance_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final String username;
@@ -21,7 +22,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int omzet = 0, transaksi = 0, item = 0;
+  int omzet = 0, transaksi = 0, item = 0, pengeluaran = 0;
   List<SaleModel> recent = [];
 
   @override
@@ -63,11 +64,17 @@ class _DashboardPageState extends State<DashboardPage> {
       [from, to],
     );
 
+    var expenseToday = 0;
+    if (widget.role == 'Administrator') {
+      expenseToday = await DB.expenseTotal(start, end);
+    }
+
     if (!mounted) return;
     setState(() {
       omzet = om;
       transaksi = tr;
       item = (rows.first['jumlah'] as num).toInt();
+      pengeluaran = expenseToday;
       recent = all.take(5).map(SaleModel.fromMap).toList();
     });
   }
@@ -116,7 +123,28 @@ class _DashboardPageState extends State<DashboardPage> {
                   _stat('Omzet', rp(omzet), Icons.payments_rounded, true),
                   _stat('Transaksi', '$transaksi', Icons.receipt_long_rounded, false, onTap: showTransactions),
                   _stat('Item Terjual', '$item', Icons.fastfood_rounded, false, onTap: showItemsSold),
-                  _stat('Status', 'V6.5.0', Icons.verified_rounded, false),
+                  if (widget.role == 'Administrator')
+                    _stat(
+                      'Pengeluaran',
+                      rp(pengeluaran),
+                      Icons.account_balance_wallet_rounded,
+                      false,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FinancePage(),
+                          ),
+                        );
+                      },
+                    )
+                  else
+                    _stat(
+                      'Status',
+                      'V6.5.0',
+                      Icons.verified_rounded,
+                      false,
+                    ),
                 ],
               );
             },

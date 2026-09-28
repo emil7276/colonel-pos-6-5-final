@@ -7,6 +7,7 @@ import '../reports/report_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/menu_page.dart';
 import '../settings/printer_page.dart';
+import '../settings/finance_page.dart';
 import 'dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -76,12 +77,14 @@ class _HomePageState extends State<HomePage> {
       PosPage(key: posKey, cashier: widget.username),
       ReportPage(role: widget.role),
       if (widget.role == 'Administrator') SettingsPage(username: widget.username),
+      if (widget.role == 'Administrator') const FinancePage(),
     ];
     final titles = [
       'Dashboard',
       'Transaksi',
       'Laporan',
       if (widget.role == 'Administrator') 'Pengaturan',
+      if (widget.role == 'Administrator') 'Keuangan',
     ];
 
     return Scaffold(
@@ -127,7 +130,17 @@ class _HomePageState extends State<HomePage> {
           const NavigationDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale_rounded), label: 'Transaksi'),
           const NavigationDestination(icon: Icon(Icons.analytics_outlined), selectedIcon: Icon(Icons.analytics_rounded), label: 'Laporan'),
           if (widget.role == 'Administrator')
-            const NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings_rounded), label: 'Admin'),
+            const NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings_rounded),
+              label: 'Admin',
+            ),
+          if (widget.role == 'Administrator')
+            const NavigationDestination(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              selectedIcon: Icon(Icons.account_balance_wallet_rounded),
+              label: 'Keuangan',
+            ),
         ],
       ),
     );
