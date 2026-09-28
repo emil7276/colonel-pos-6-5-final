@@ -26,6 +26,7 @@ class _PrinterPageState extends State<PrinterPage> {
   bool saving = false;
   bool loadingBluetooth = false;
   bool connected = false;
+  bool choosingPrinter = false;
   String? selectedMac;
   String? selectedName;
   List<BluetoothInfo> devices = [];
@@ -66,6 +67,74 @@ class _PrinterPageState extends State<PrinterPage> {
       if (mounted) _toast('Gagal membaca perangkat Bluetooth: $e');
     } finally {
       if (mounted) setState(() => loadingBluetooth = false);
+    }
+  }
+
+  Future<void> _choosePrinter() async {
+    setState(() => choosingPrinter = true);
+    try {
+      final enabled = await PrintBluetoothThermal.bluetoothEnabled;
+      if (!enabled) {
+        _toast('Bluetooth HP belum aktif. Aktifkan Bluetooth terlebih dahulu.');
+        return;
+      }
+
+      final paired = await PrintBluetoothThermal.pairedBluetooths;
+      if (!mounted) return;
+
+      final device = await showModalBottomSheet<BluetoothInfo>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (_) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Pilih Printer Bluetooth',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Pilih perangkat printer thermal yang sudah dipasangkan di Android.',
+                ),
+              ),
+              if (paired.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Text('Belum ada perangkat Bluetooth yang dipasangkan.'),
+                ),
+              ...paired.map(
+                (d) => ListTile(
+                  leading: const Icon(Icons.bluetooth_rounded, color: red),
+                  title: Text(
+                    d.name.isEmpty ? 'Perangkat tanpa nama' : d.name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(d.macAdress),
+                  trailing: selectedMac == d.macAdress
+                      ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                      : null,
+                  onTap: () => Navigator.pop(context, d),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (device != null) {
+        await _connect(device);
+      }
+    } catch (e) {
+      if (mounted) _toast('Gagal membaca perangkat Bluetooth: $e');
+    } finally {
+      if (mounted) setState(() => choosingPrinter = false);
     }
   }
 
@@ -211,24 +280,22 @@ class _PrinterPageState extends State<PrinterPage> {
                           : FilledButton(onPressed: loadingBluetooth ? null : () => _connect(BluetoothInfo(name: selectedName!, macAdress: selectedMac!)), child: const Text('Hubungkan')),
                     ),
                   ),
-                if (devices.isEmpty && !loadingBluetooth)
+                if (selectedName == null || selectedMac == null)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Text('Belum ada printer yang dipasangkan di HP.'),
+                    child: Text('Belum ada printer yang dipilih.'),
                   ),
-                ...devices.map(
-                  (device) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.bluetooth_rounded, color: red),
-                    title: Text(device.name.isEmpty ? 'Printer tanpa nama' : device.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text(device.macAdress),
-                    trailing: selectedMac == device.macAdress && connected
-                        ? const Icon(Icons.check_circle_rounded, color: Colors.green)
-                        : FilledButton.tonal(onPressed: loadingBluetooth ? null : () => _connect(device), child: const Text('Hubungkan')),
-                  ),
+                OutlinedButton.icon(
+                  onPressed: loadingBluetooth || choosingPrinter ? null : _choosePrinter,
+                  icon: const Icon(Icons.bluetooth_searching_rounded),
+                  label: Text(choosingPrinter ? 'MEMUAT PERANGKAT...' : 'PILIH PRINTER LAIN'),
                 ),
                 const SizedBox(height: 4),
-                OutlinedButton.icon(onPressed: _pairHelp, icon: const Icon(Icons.bluetooth_searching_rounded), label: const Text('CARA PASANG PRINTER')),
+                OutlinedButton.icon(
+                  onPressed: _pairHelp,
+                  icon: const Icon(Icons.help_outline_rounded),
+                  label: const Text('CARA PASANG PRINTER'),
+                ),
               ],
             ],
           ),
