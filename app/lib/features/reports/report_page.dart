@@ -71,7 +71,7 @@ class _ReportPageState extends State<ReportPage> {
       _trendCard(),
       _customerSection(),
       _paymentSummary(),
-      _section('Penjualan Berdasarkan Item',best.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:best.take(8).map((x)=>ListTile(leading:CircleAvatar(child:Text('${x['qty']}')),title:Text(x['name'].toString()),trailing:Text(rp(x['omzet'] as num),style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
+      _itemSalesSection(),
       _section('Jam Transaksi',hours.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:hours.take(8).map((x)=>ListTile(leading:const Icon(Icons.schedule_outlined),title:Text('${x['jam']}:00'),trailing:Text('${x['transaksi']} transaksi'))).toList()),
       const SizedBox(height:6),
       const Text('Transaksi Hari Ini',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),
@@ -189,20 +189,92 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   Widget _customerSection() {
+    final sortedCustomers = List<Map<String,dynamic>>.from(customers)
+      ..sort((a, b) => a['customer_name'].toString().toLowerCase()
+          .compareTo(b['customer_name'].toString().toLowerCase()));
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ExpansionTile(
         initiallyExpanded: true,
-        title: const Text('Penjualan Berdasarkan Pelanggan', style: TextStyle(fontWeight: FontWeight.w900)),
-        children: customers.isEmpty
+        title: const Text(
+          'Penjualan Berdasarkan Pelanggan',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        children: sortedCustomers.isEmpty
             ? [const ListTile(title: Text('Belum ada penjualan pada periode ini.'))]
-            : customers.take(12).map((x) => ListTile(
-                dense: true,
-                leading: CircleAvatar(radius: 17, backgroundColor: redSoft, foregroundColor: red, child: const Icon(Icons.person_outline_rounded, size: 18)),
-                title: Text(x['customer_name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text('${x['customer_type']} • ${x['transaksi']} transaksi'),
-                trailing: Text(rp(x['omzet'] as num), style: const TextStyle(fontWeight: FontWeight.w800)),
-              )).toList(),
+            : [
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: sortedCustomers.length,
+                    itemBuilder: (_, i) {
+                      final x = sortedCustomers[i];
+                      return ListTile(
+                        dense: true,
+                        leading: CircleAvatar(
+                          radius: 17,
+                          backgroundColor: redSoft,
+                          foregroundColor: red,
+                          child: const Icon(Icons.person_outline_rounded, size: 18),
+                        ),
+                        title: Text(
+                          x['customer_name'].toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: Text('${x['customer_type']} • ${x['transaksi']} transaksi'),
+                        trailing: Text(
+                          rp(x['omzet'] as num),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+      ),
+    );
+  }
+
+  Widget _itemSalesSection() {
+    final sortedItems = List<Map<String,dynamic>>.from(best)
+      ..sort((a, b) => (b['qty'] as num).compareTo(a['qty'] as num));
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        title: const Text(
+          'Penjualan Berdasarkan Item',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        children: sortedItems.isEmpty
+            ? [const ListTile(title: Text('Belum ada penjualan.'))]
+            : [
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: sortedItems.length,
+                    itemBuilder: (_, i) {
+                      final x = sortedItems[i];
+                      return ListTile(
+                        dense: true,
+                        leading: CircleAvatar(
+                          child: Text('${x['qty']}'),
+                        ),
+                        title: Text(
+                          x['name'].toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        trailing: Text(
+                          rp(x['omzet'] as num),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
       ),
     );
   }
