@@ -257,9 +257,9 @@ class _MenuPageState extends State<MenuPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
                                 const SizedBox(height: 3),
-                                Text('${p.category}  •  ${rp(p.price)}  •  Stok ${p.stock}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: inkMuted, fontSize: 13)),
+                                Text('${p.category}  •  ${rp(p.price)}  •  Stok ${p.stock}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: inkMuted, fontSize: 14)),
                               ],
                             ),
                           ),

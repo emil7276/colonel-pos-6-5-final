@@ -79,7 +79,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
                       const Text('Ringkasan penjualan hari ini', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
                     ],
@@ -114,7 +114,7 @@ class _DashboardPageState extends State<DashboardPage> {
             },
           ),
           const SizedBox(height: 18),
-          const Text('Akses Cepat', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          const Text('Akses Cepat', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, c) {
@@ -181,7 +181,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
               ),
             ),
           ],
