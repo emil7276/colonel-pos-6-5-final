@@ -174,8 +174,18 @@ Future<List<int>> _escPosReceipt(SaleModel sale, {required String paper, int cop
 }
 
 Future<bool> _ensureBluetoothConnection() async {
+  final permission = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+  if (!permission) {
+    throw Exception('Izin Perangkat Terdekat/Bluetooth belum diberikan. Buka Pengaturan Android > Aplikasi > CP Colonel POS > Izin, lalu izinkan Perangkat Terdekat.');
+  }
+  final enabled = await PrintBluetoothThermal.bluetoothEnabled;
+  if (!enabled) {
+    throw Exception('Bluetooth HP sedang mati. Nyalakan Bluetooth lalu coba lagi.');
+  }
   final mac = await printerMac();
-  if (mac == null || mac.trim().isEmpty) return false;
+  if (mac == null || mac.trim().isEmpty) {
+    throw Exception('Printer belum dipilih. Buka Pengaturan > Printer dan pilih printer yang sudah dipasangkan.');
+  }
   if (await PrintBluetoothThermal.connectionStatus) return true;
   return PrintBluetoothThermal.connect(macPrinterAddress: mac.trim());
 }

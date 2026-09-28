@@ -33,8 +33,8 @@ class ColonelApp extends StatelessWidget {
           labelSmall: TextStyle(fontWeight: FontWeight.w700),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: ink,
+          backgroundColor: navy,
+          foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: false,
           scrolledUnderElevation: 0,

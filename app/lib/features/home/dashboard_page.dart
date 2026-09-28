@@ -69,7 +69,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return RefreshIndicator(
       onRefresh: load,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           CpGradientCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -103,7 +103,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
-                childAspectRatio: 2.05,
+                childAspectRatio: 1.72,
                 children: [
                   _stat('Omzet', rp(omzet), Icons.payments_rounded, true),
                   _stat('Transaksi', '$transaksi', Icons.receipt_long_rounded, false, onTap: showTransactions),

@@ -685,4 +685,34 @@ class DB {
       'stock_logs': await db.query('stock_logs'),
     };
   }
+  static Future<void> restoreBackup(Map<String, dynamic> data) async {
+    const tables = ['products', 'users', 'sales', 'sale_items', 'stock_logs'];
+    for (final table in tables) {
+      if (data[table] is! List) {
+        throw Exception('Format backup tidak valid: $table');
+      }
+    }
+    final db = await database;
+    await db.transaction((txn) async {
+      for (final table in tables) {
+        await txn.delete(table);
+      }
+      for (final row in (data['products'] as List)) {
+        await txn.insert('products', Map<String, Object?>.from(row as Map));
+      }
+      for (final row in (data['users'] as List)) {
+        await txn.insert('users', Map<String, Object?>.from(row as Map));
+      }
+      for (final row in (data['sales'] as List)) {
+        await txn.insert('sales', Map<String, Object?>.from(row as Map));
+      }
+      for (final row in (data['sale_items'] as List)) {
+        await txn.insert('sale_items', Map<String, Object?>.from(row as Map));
+      }
+      for (final row in (data['stock_logs'] as List)) {
+        await txn.insert('stock_logs', Map<String, Object?>.from(row as Map));
+      }
+    });
+  }
+
 }

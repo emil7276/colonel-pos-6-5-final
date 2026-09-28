@@ -54,6 +54,7 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
+      backgroundColor: navy,
       appBar: AppBar(
         toolbarHeight: 66,
         titleSpacing: 8,
@@ -66,7 +67,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(titles[index], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-            Text('${widget.username} • ${widget.role}', style: const TextStyle(fontSize: 11, color: inkMuted, fontWeight: FontWeight.w600)),
+            Text('${widget.username} • ${widget.role}', style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
           ],
         ),
         actions: [
@@ -79,7 +80,13 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SafeArea(
-        child: IndexedStack(index: index, children: pages),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Container(
+            color: bg,
+            child: IndexedStack(index: index, children: pages),
+          ),
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
