@@ -79,9 +79,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
-                      const Text('Ringkasan penjualan hari ini', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      const Text('Ringkasan penjualan hari ini', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -113,6 +113,28 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             },
           ),
+          const SizedBox(height: 18),
+          const Text('Akses Cepat', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, c) {
+              final cols = c.maxWidth >= 700 ? 4 : 2;
+              return GridView.count(
+                crossAxisCount: cols,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 2.25,
+                children: [
+                  _quick('Transaksi Baru', Icons.point_of_sale_rounded),
+                  _quick('Laporan', Icons.analytics_rounded),
+                  _quick('Produk', Icons.restaurant_menu_rounded),
+                  _quick('Printer', Icons.print_rounded),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 20),
           const Text('Transaksi Terbaru', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 9),
@@ -133,6 +155,37 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           const CopyrightFooter(),
         ],
+      ),
+    );
+  }
+
+
+  Widget _quick(String title, IconData icon) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: redSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: red, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

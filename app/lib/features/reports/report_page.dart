@@ -48,13 +48,13 @@ class _ReportPageState extends State<ReportPage> {
 
   @override Widget build(BuildContext context){
     return RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(16,16,16,28),children:[
-      Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Laporan Harian',style:TextStyle(fontSize:24,fontWeight:FontWeight.w800)),Text(displayDate(selectedDate),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant))])),OutlinedButton.icon(onPressed:pickDate,icon:const Icon(Icons.calendar_month_outlined),label:const Text('Pilih tanggal'))]),
+      Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Laporan Harian',style:TextStyle(fontSize:23,fontWeight:FontWeight.w900)),Text(displayDate(selectedDate),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant))])),OutlinedButton.icon(onPressed:pickDate,icon:const Icon(Icons.calendar_month_outlined),label:const Text('Pilih tanggal'))]),
       const SizedBox(height:16),
       if(loading) const LinearProgressIndicator(minHeight:3),
       const SizedBox(height:8),
       LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:2.15,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined,onTap:showTransactions),_metric('Item Terjual','$item',Icons.fastfood_outlined,onTap:showItemsSold),_metric('Retur','$retur',Icons.assignment_return_outlined) ]);}),
       const SizedBox(height:16),
-      _section('Ringkasan Pembayaran',payments.isEmpty?[const ListTile(title:Text('Belum ada transaksi pada tanggal ini.'))]:payments.entries.map((e)=>ListTile(leading:Icon(e.key=='Tunai'?Icons.payments_outlined:Icons.qr_code_2_outlined),title:Text(e.key),trailing:Text('${e.value} transaksi',style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
+      _paymentSummary(),
       _section('Menu Terlaris',best.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:best.take(8).map((x)=>ListTile(leading:CircleAvatar(child:Text('${x['qty']}')),title:Text(x['name'].toString()),trailing:Text(rp(x['omzet'] as num),style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
       _section('Jam Transaksi',hours.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:hours.take(8).map((x)=>ListTile(leading:const Icon(Icons.schedule_outlined),title:Text('${x['jam']}:00'),trailing:Text('${x['transaksi']} transaksi'))).toList()),
       const SizedBox(height:6),
@@ -64,6 +64,93 @@ class _ReportPageState extends State<ReportPage> {
       ...sales.map((s)=>Card(child:ListTile(onTap:()=>saleDetail(s),leading:CircleAvatar(child:Icon(s.returned?Icons.undo:Icons.receipt_long_outlined)),title:Text(s.no,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text('${s.time} • ${s.cashier} • ${s.payment}'),trailing:Text(s.returned?'RETUR':rp(s.total),style:TextStyle(fontWeight:FontWeight.w800,color:s.returned?Colors.red:null))))),
       const CopyrightFooter(),
     ]));
+  }
+
+
+  Widget _paymentSummary() {
+    final total = payments.values.fold<int>(0, (a, b) => a + b);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Ringkasan Pembayaran', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 14),
+            if (payments.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text('Belum ada transaksi pada tanggal ini.'),
+              )
+            else
+              Row(
+                children: [
+                  SizedBox(
+                    width: 118,
+                    height: 118,
+                    child: CustomPaint(
+                      painter: _DonutPainter(values: payments.values.toList()),
+                      child: Center(
+                        child: Text(
+                          '$total\\ntransaksi',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      children: payments.entries.map((e) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: _paymentColor(e.key),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  e.key,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              Text(
+                                '${e.value}',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _paymentColor(String key) {
+    final i = payments.keys.toList().indexOf(key);
+    const colors = [
+      red,
+      navy,
+      Color(0xFF2E7D32),
+      Color(0xFFF59E0B),
+      Color(0xFF7C3AED),
+    ];
+    return colors[i % colors.length];
   }
 
   Widget _metric(String title, String value, IconData icon, {VoidCallback? onTap}) {

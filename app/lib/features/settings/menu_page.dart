@@ -224,7 +224,7 @@ class _MenuPageState extends State<MenuPage> {
                       style: TextStyle(
                         color: selected ? Colors.white : ink,
                         fontWeight: FontWeight.w800,
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -243,12 +243,12 @@ class _MenuPageState extends State<MenuPage> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 7, 8),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
                       child: Row(
                         children: [
                           Container(
-                            width: 42,
-                            height: 42,
+                            width: 46,
+                            height: 46,
                             decoration: BoxDecoration(color: redSoft, borderRadius: BorderRadius.circular(13)),
                             child: const Icon(Icons.fastfood_rounded, color: red, size: 22),
                           ),
@@ -257,9 +257,9 @@ class _MenuPageState extends State<MenuPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                                 const SizedBox(height: 3),
-                                Text('${p.category}  •  ${rp(p.price)}  •  Stok ${p.stock}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: inkMuted, fontSize: 12)),
+                                Text('${p.category}  •  ${rp(p.price)}  •  Stok ${p.stock}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: inkMuted, fontSize: 13)),
                               ],
                             ),
                           ),

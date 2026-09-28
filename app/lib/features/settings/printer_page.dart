@@ -95,7 +95,7 @@ class _PrinterPageState extends State<PrinterPage> {
                 padding: EdgeInsets.only(bottom: 8),
                 child: Text(
                   'Pilih Printer Bluetooth',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
                 ),
               ),
               const Padding(
@@ -378,7 +378,7 @@ class _PrinterPageState extends State<PrinterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('CP POS Printer', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                Text('CP POS Printer', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
                 SizedBox(height: 4),
                 Text('Bluetooth thermal + System Print', style: TextStyle(color: Colors.white70)),
               ],

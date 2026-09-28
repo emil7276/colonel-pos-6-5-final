@@ -22,15 +22,17 @@ class ColonelApp extends StatelessWidget {
         fontFamily: 'sans-serif-condensed',
         visualDensity: VisualDensity.standard,
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontWeight: FontWeight.w500),
-          bodyMedium: TextStyle(fontWeight: FontWeight.w500),
-          bodySmall: TextStyle(fontWeight: FontWeight.w500),
-          titleLarge: TextStyle(fontWeight: FontWeight.w800),
-          titleMedium: TextStyle(fontWeight: FontWeight.w800),
-          titleSmall: TextStyle(fontWeight: FontWeight.w700),
-          labelLarge: TextStyle(fontWeight: FontWeight.w700),
-          labelMedium: TextStyle(fontWeight: FontWeight.w700),
-          labelSmall: TextStyle(fontWeight: FontWeight.w700),
+          displaySmall: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -.4),
+          headlineSmall: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: -.2),
+          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+          titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+          bodyLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.25),
+          bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.25),
+          bodySmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, height: 1.2),
+          labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+          labelMedium: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: navy,
@@ -38,6 +40,7 @@ class ColonelApp extends StatelessWidget {
           elevation: 0,
           centerTitle: false,
           scrolledUnderElevation: 0,
+          titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
         ),
         cardTheme: CardThemeData(
           elevation: 0,
@@ -45,7 +48,8 @@ class ColonelApp extends StatelessWidget {
           color: Colors.white,
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: line),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -53,7 +57,7 @@ class ColonelApp extends StatelessWidget {
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
-            vertical: 15,
+            vertical: 14,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
@@ -72,7 +76,7 @@ class ColonelApp extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: red,
             foregroundColor: Colors.white,
-            minimumSize: const Size(0, 50),
+            minimumSize: const Size(0, 48),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -90,7 +94,7 @@ class ColonelApp extends StatelessWidget {
           ),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          height: 72,
+          height: 76,
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
           indicatorColor: red.withValues(alpha: .12),
