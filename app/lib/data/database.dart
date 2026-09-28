@@ -23,7 +23,7 @@ class DB {
 
     _db = await openDatabase(
       path.join(dir, 'colonel_pos_v64.db'),
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE products(
@@ -86,6 +86,16 @@ class DB {
           )
         ''');
 
+        await db.execute('''
+          CREATE TABLE expenses(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            expense_date TEXT NOT NULL,
+            category TEXT NOT NULL,
+            note TEXT NOT NULL,
+            amount INTEGER NOT NULL
+          )
+        ''');
+
         await db.insert('users', {
           'username': 'admin',
           'password': '1234',
@@ -133,6 +143,18 @@ class DB {
           await db.execute(
             "ALTER TABLE sales ADD COLUMN customer_type TEXT NOT NULL DEFAULT 'Retail'",
           );
+        }
+
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE expenses(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              expense_date TEXT NOT NULL,
+              category TEXT NOT NULL,
+              note TEXT NOT NULL,
+              amount INTEGER NOT NULL
+            )
+          ''');
         }
       },
     );
@@ -761,6 +783,83 @@ class DB {
       'returnedSales': returned, 'returned': returned.length, 'omzet': valid.fold<int>(0, (sum, x) => sum + (x['total'] as num).toInt()), 'transaksi': valid.length, 'item': (itemRows.first['jumlah'] as num).toInt(), 'payments': payments};
   }
 
+
+  static Future<List<Map<String, dynamic>>> expenses(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await database;
+    return db.query(
+      'expenses',
+      where: 'expense_date >= ? AND expense_date < ?',
+      whereArgs: [_dbDate(from), _dbDate(to)],
+      orderBy: 'expense_date DESC, id DESC',
+    );
+  }
+
+  static Future<int> expenseTotal(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(amount), 0) AS total
+      FROM expenses
+      WHERE expense_date >= ? AND expense_date < ?
+      ''',
+      [_dbDate(from), _dbDate(to)],
+    );
+    return (rows.first['total'] as num).toInt();
+  }
+
+  static Future<void> saveExpense({
+    int? id,
+    required DateTime date,
+    required String category,
+    required String note,
+    required int amount,
+  }) async {
+    if (category.trim().isEmpty) {
+      throw Exception('Kategori wajib diisi.');
+    }
+    if (note.trim().isEmpty) {
+      throw Exception('Keterangan wajib diisi.');
+    }
+    if (amount <= 0) {
+      throw Exception('Nominal harus lebih dari 0.');
+    }
+
+    final db = await database;
+
+    final data = {
+      'expense_date': _dbDate(date),
+      'category': category.trim(),
+      'note': note.trim(),
+      'amount': amount,
+    };
+
+    if (id == null) {
+      await db.insert('expenses', data);
+    } else {
+      await db.update(
+        'expenses',
+        data,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+  }
+
+  static Future<void> deleteExpense(int id) async {
+    final db = await database;
+    await db.delete(
+      'expenses',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<Map<String, dynamic>> backup() async {
     final db = await database;
 
@@ -772,6 +871,7 @@ class DB {
       'sales': await db.query('sales'),
       'sale_items': await db.query('sale_items'),
       'stock_logs': await db.query('stock_logs'),
+      'expenses': await db.query('expenses'),
     };
   }
   static Future<void> restoreBackup(Map<String, dynamic> data) async {
@@ -800,6 +900,12 @@ class DB {
       }
       for (final row in (data['stock_logs'] as List)) {
         await txn.insert('stock_logs', Map<String, Object?>.from(row as Map));
+      }
+
+      if (data['expenses'] is List) {
+        for (final row in (data['expenses'] as List)) {
+          await txn.insert('expenses', Map<String, Object?>.from(row as Map));
+        }
       }
     });
   }
