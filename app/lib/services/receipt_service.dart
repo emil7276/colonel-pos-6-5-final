@@ -127,7 +127,7 @@ Future<List<int>> _escPosReceipt(SaleModel sale, {required String paper, int cop
 
   for (var copy = 0; copy < copies; copy++) {
     bytes.addAll(generator.reset());
-    bytes.addAll(generator.text(name, styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2)));
+    bytes.addAll(generator.text(name, styles: PosStyles(align: PosAlign.center, bold: true)));
     if (address.isNotEmpty) bytes.addAll(generator.text(address, styles: PosStyles(align: PosAlign.center)));
     if (phone.isNotEmpty) bytes.addAll(generator.text(phone, styles: PosStyles(align: PosAlign.center)));
     bytes.addAll(generator.feed(1));
