@@ -52,7 +52,7 @@ class _ReportPageState extends State<ReportPage> {
       const SizedBox(height:16),
       if(loading) const LinearProgressIndicator(minHeight:3),
       const SizedBox(height:8),
-      LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:12,mainAxisSpacing:12,childAspectRatio:2.0,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined),_metric('Item Terjual','$item',Icons.fastfood_outlined),_metric('Retur','$retur',Icons.assignment_return_outlined)]);}),
+      LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:2.15,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined,onTap:showTransactions),_metric('Item Terjual','$item',Icons.fastfood_outlined,onTap:showItemsSold),_metric('Retur','$retur',Icons.assignment_return_outlined) ]);}),
       const SizedBox(height:16),
       _section('Ringkasan Pembayaran',payments.isEmpty?[const ListTile(title:Text('Belum ada transaksi pada tanggal ini.'))]:payments.entries.map((e)=>ListTile(leading:Icon(e.key=='Tunai'?Icons.payments_outlined:Icons.qr_code_2_outlined),title:Text(e.key),trailing:Text('${e.value} transaksi',style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
       _section('Menu Terlaris',best.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:best.take(8).map((x)=>ListTile(leading:CircleAvatar(child:Text('${x['qty']}')),title:Text(x['name'].toString()),trailing:Text(rp(x['omzet'] as num),style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
@@ -66,7 +66,150 @@ class _ReportPageState extends State<ReportPage> {
     ]));
   }
 
-  Widget _metric(String title,String value,IconData icon)=>Card(child:Padding(padding:const EdgeInsets.all(16),child:Row(children:[Icon(icon,color:red,size:30),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Text(title),FittedBox(alignment:Alignment.centerLeft,child:Text(value,style:const TextStyle(fontSize:19,fontWeight:FontWeight.w800)))]))])));
+  Widget _metric(String title, String value, IconData icon, {VoidCallback? onTap}) {
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: redSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: red, size: 18),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: inkMuted,
+                            ),
+                          ),
+                        ),
+                        if (onTap != null)
+                          const Icon(Icons.chevron_right_rounded, size: 17, color: inkMuted),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        value,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showTransactions() async {
+    if (sales.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Belum ada transaksi pada tanggal ini.')),
+      );
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * .72,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Transaksi', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: sales.length,
+                    itemBuilder: (_, i) {
+                      final s = sales[i];
+                      return ListTile(
+                        onTap: () => saleDetail(s),
+                        dense: true,
+                        leading: const Icon(Icons.receipt_long_rounded, color: red),
+                        title: Text(s.no, style: const TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: Text('${s.time} • ${s.payment}'),
+                        trailing: Text(
+                          s.returned ? 'RETUR' : rp(s.total),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showItemsSold() async {
+    if (best.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Belum ada item terjual pada tanggal ini.')),
+      );
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Item Terjual', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 8),
+              ...best.take(12).map(
+                (x) => ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 17,
+                    backgroundColor: redSoft,
+                    foregroundColor: red,
+                    child: Text('${x['qty']}'),
+                  ),
+                  title: Text(x['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                  trailing: Text(rp(x['omzet'] as num), style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _section(String title,List<Widget> children)=>Card(margin:const EdgeInsets.only(bottom:12),child:ExpansionTile(initiallyExpanded:true,title:Text(title,style:const TextStyle(fontWeight:FontWeight.w800)),children:children));
 
   Future<void> saleDetail(SaleModel s) async {

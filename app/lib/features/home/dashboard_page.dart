@@ -72,26 +72,28 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
           CpGradientCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                const CpLogo(size: 72),
-                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('CP POS', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900)),
+                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 4),
-                      Text('Selamat datang, ${widget.username}', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      const Text('Ringkasan penjualan hari ini', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      const Text('Ringkasan penjualan hari ini', style: TextStyle(color: Colors.white70, fontSize: 11)),
                     ],
                   ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 20),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, c) {
               final cross = c.maxWidth > 700 ? 4 : 2;
@@ -99,13 +101,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisCount: cross,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.65,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 2.05,
                 children: [
                   _stat('Omzet', rp(omzet), Icons.payments_rounded, true),
-                  _stat('Transaksi', '$transaksi', Icons.receipt_long_rounded, false),
-                  _stat('Item Terjual', '$item', Icons.fastfood_rounded, false),
+                  _stat('Transaksi', '$transaksi', Icons.receipt_long_rounded, false, onTap: showTransactions),
+                  _stat('Item Terjual', '$item', Icons.fastfood_rounded, false, onTap: showItemsSold),
                   _stat('Status', 'V6.5.0', Icons.verified_rounded, false),
                 ],
               );
@@ -135,33 +137,114 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _stat(String title, String value, IconData icon, bool primary) {
+  Widget _stat(String title, String value, IconData icon, bool primary, {VoidCallback? onTap}) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(color: primary ? redSoft : const Color(0xFFF3F3F5), borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: primary ? red : ink, size: 23),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(title, style: const TextStyle(color: inkMuted, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 3),
-                  FittedBox(alignment: Alignment.centerLeft, child: Text(value, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: primary ? red : ink))),
-                ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: primary ? redSoft : const Color(0xFFF3F3F5), borderRadius: BorderRadius.circular(11)),
+                child: Icon(icon, color: primary ? red : ink, size: 19),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(children: [Expanded(child: Text(title, style: const TextStyle(color: inkMuted, fontSize: 11, fontWeight: FontWeight.w700))), if (onTap != null) const Icon(Icons.chevron_right_rounded, size: 17, color: inkMuted)]),
+                    const SizedBox(height: 2),
+                    FittedBox(alignment: Alignment.centerLeft, child: Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: primary ? red : ink))),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Future<void> showTransactions() async {
+    final summary = await DB.daySummary(DateTime.now());
+    final sales = (summary['sales'] as List).map((e) => SaleModel.fromMap(e as Map<String, dynamic>)).toList();
+    if (!mounted) return;
+    if (sales.isEmpty) {
+      await showDialog<void>(context: context, builder: (_) => const AlertDialog(title: Text('Transaksi'), content: Text('Belum ada transaksi hari ini.')));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * .72,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Transaksi Hari Ini', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: sales.length,
+                    itemBuilder: (_, i) {
+                      final sale = sales[i];
+                      return ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.receipt_long_rounded, color: red),
+                        title: Text(sale.no, style: const TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: Text('${sale.time} • ${sale.payment}'),
+                        trailing: Text(rp(sale.total), style: const TextStyle(fontWeight: FontWeight.w800)),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showItemsSold() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final end = start.add(const Duration(days: 1));
+    final rows = await DB.bestSelling(start, end);
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Item Terjual Hari Ini', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 8),
+              if (rows.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('Belum ada item terjual hari ini.')),
+              ...rows.take(12).map((r) => ListTile(
+                dense: true,
+                leading: CircleAvatar(radius: 17, backgroundColor: redSoft, foregroundColor: red, child: Text('${r['qty']}')),
+                title: Text(r['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                trailing: Text(rp(r['omzet'] as num), style: const TextStyle(fontWeight: FontWeight.w800)),
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 }

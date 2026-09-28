@@ -494,8 +494,6 @@ class PosPageState extends State<PosPage> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  const CpLogo(size: 38),
-                  const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
                       'Pilih Menu',
@@ -550,8 +548,8 @@ class PosPageState extends State<PosPage> {
                   mainAxisSpacing: 8,
                   childAspectRatio:
                       tablet
-                          ? 1.15
-                          : 0.95,
+                          ? 1.28
+                          : 1.08,
                 ),
                 itemCount:
                     filtered.length,
@@ -569,7 +567,7 @@ class PosPageState extends State<PosPage> {
                         padding:
                             const EdgeInsets
                                 .all(
-                          10,
+                          7,
                         ),
                         child: Column(
                           mainAxisAlignment:
@@ -577,16 +575,16 @@ class PosPageState extends State<PosPage> {
                                   .center,
                           children: [
                             Container(
-                              width: 52,
-                              height: 52,
+                              width: 42,
+                              height: 42,
                               decoration: BoxDecoration(
                                 color: redSoft,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(Icons.fastfood_rounded, size: 28, color: red),
+                              child: const Icon(Icons.fastfood_rounded, size: 22, color: red),
                             ),
                             const SizedBox(
-                              height: 6,
+                              height: 3,
                             ),
                             Text(
                               p.name,
@@ -630,16 +628,10 @@ class PosPageState extends State<PosPage> {
           child: Column(
             children: [
               const ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 14),
-                leading: CircleAvatar(
-                  backgroundColor: redSoft,
-                  foregroundColor: red,
-                  child: Icon(Icons.shopping_cart_rounded),
-                ),
-                title: Text(
-                  'Keranjang',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
+                dense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                leading: Icon(Icons.shopping_cart_rounded, color: red, size: 21),
+                title: Text('Keranjang', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
               ),
               Expanded(
                 child: cart.isEmpty
@@ -654,6 +646,7 @@ class PosPageState extends State<PosPage> {
                           (line) {
                             return ListTile(
                               dense: true,
+                              visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
                               title: Text(
                                 line.product
                                     .name,
@@ -715,9 +708,7 @@ class PosPageState extends State<PosPage> {
               const Divider(),
               Padding(
                 padding:
-                    const EdgeInsets.all(
-                  12,
-                ),
+                    const EdgeInsets.fromLTRB(10, 6, 10, 8),
                 child: Column(
                   children: [
                     Row(
@@ -853,7 +844,7 @@ class PosPageState extends State<PosPage> {
               child: productGrid,
             ),
             SizedBox(
-              height: 360,
+              height: 315,
               child: cartPanel,
             ),
           ],

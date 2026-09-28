@@ -6,6 +6,16 @@ import '../core/utils.dart';
 class DB {
   static Database? _db;
 
+  static String _dbDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    final h = date.hour.toString().padLeft(2, '0');
+    final min = date.minute.toString().padLeft(2, '0');
+    final s = date.second.toString().padLeft(2, '0');
+    return '$y-$m-$d $h:$min:$s';
+  }
+
   static Future<Database> get database async {
     if (_db != null) return _db!;
 
@@ -118,25 +128,6 @@ class DB {
     return _db!;
   }
 
-  // ============================================================
-  // FORMAT TANGGAL UNTUK QUERY DATABASE
-  // ============================================================
-
-  static String _dbDate(DateTime date) {
-    final y = date.year.toString().padLeft(4, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    final h = date.hour.toString().padLeft(2, '0');
-    final min = date.minute.toString().padLeft(2, '0');
-    final s = date.second.toString().padLeft(2, '0');
-
-    return '$y-$m-$d $h:$min:$s';
-  }
-
-  // ============================================================
-  // PRODUCTS
-  // ============================================================
-
   static Future<List<Map<String, dynamic>>> products() async {
     final db = await database;
 
@@ -146,16 +137,21 @@ class DB {
     );
   }
 
-  // ============================================================
-  // USERS
-  // ============================================================
-
   static Future<List<Map<String, dynamic>>> users() async {
     final db = await database;
 
     return db.query(
       'users',
       orderBy: 'username',
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> sales() async {
+    final db = await database;
+
+    return db.query(
+      'sales',
+      orderBy: 'sale_time DESC',
     );
   }
 
@@ -175,64 +171,45 @@ class DB {
     return rows.isEmpty ? null : rows.first;
   }
 
-  static Future<void> saveUser({
+  static Future<void> saveProduct({
     int? id,
-    required String username,
-    required String password,
-    required String role,
+    required String name,
+    required String category,
+    required int price,
+    required int stock,
     required bool active,
   }) async {
     final db = await database;
 
-    final cleanUsername = username.trim();
-
-    if (cleanUsername.isEmpty) {
-      throw Exception(
-        'Username tidak boleh kosong.',
-      );
+    if (name.trim().isEmpty) {
+      throw Exception('Nama menu tidak boleh kosong.');
     }
 
-    if (password.isEmpty) {
-      throw Exception(
-        'Password tidak boleh kosong.',
-      );
+    if (category.trim().isEmpty) {
+      throw Exception('Kategori tidak boleh kosong.');
     }
 
-    if (role != 'Administrator' && role != 'Kasir') {
-      throw Exception(
-        'Role pengguna tidak valid.',
-      );
+    if (price <= 0) {
+      throw Exception('Harga harus lebih dari 0.');
     }
 
-    final duplicate = await db.query(
-      'users',
-      columns: ['id'],
-      where: 'username=? AND id!=?',
-      whereArgs: [
-        cleanUsername,
-        id ?? -1,
-      ],
-      limit: 1,
-    );
-
-    if (duplicate.isNotEmpty) {
-      throw Exception(
-        'Username "$cleanUsername" sudah digunakan.',
-      );
+    if (stock < 0) {
+      throw Exception('Stok tidak boleh negatif.');
     }
 
     final data = {
-      'username': cleanUsername,
-      'password': password,
-      'role': role,
+      'name': name.trim(),
+      'category': category.trim(),
+      'price': price,
+      'stock': stock,
       'active': active ? 1 : 0,
     };
 
     if (id == null) {
-      await db.insert('users', data);
+      await db.insert('products', data);
     } else {
       await db.update(
-        'users',
+        'products',
         data,
         where: 'id=?',
         whereArgs: [id],
@@ -240,17 +217,57 @@ class DB {
     }
   }
 
-  // ============================================================
-  // SALES
-  // ============================================================
-
-  static Future<List<Map<String, dynamic>>> sales() async {
+  static Future<void> deleteProduct(int id) async {
     final db = await database;
 
-    return db.query(
-      'sales',
-      orderBy: 'sale_time DESC',
+    await db.update(
+      'products',
+      {'active': 0},
+      where: 'id=?',
+      whereArgs: [id],
     );
+  }
+
+  static Future<void> addStock(
+    int productId,
+    int qty,
+    String note,
+  ) async {
+    if (qty <= 0) {
+      throw Exception(
+        'Jumlah stok harus lebih dari 0.',
+      );
+    }
+
+    final db = await database;
+
+    await db.transaction((txn) async {
+      final product = await txn.query(
+        'products',
+        where: 'id=?',
+        whereArgs: [productId],
+        limit: 1,
+      );
+
+      if (product.isEmpty) {
+        throw Exception(
+          'Produk tidak ditemukan.',
+        );
+      }
+
+      await txn.rawUpdate(
+        'UPDATE products SET stock=stock+? WHERE id=?',
+        [qty, productId],
+      );
+
+      await txn.insert('stock_logs', {
+        'product_id': productId,
+        'time': stamp(),
+        'type': 'MASUK',
+        'qty': qty,
+        'note': note,
+      });
+    });
   }
 
   static Future<String> nextSaleNo(
@@ -331,6 +348,8 @@ class DB {
         }
       }
 
+      // IMPORTANT:
+      // Gunakan transaction yang sama.
       final no = await nextSaleNo(txn);
 
       final saleId = await txn.insert(
@@ -407,10 +426,6 @@ class DB {
     );
   }
 
-  // ============================================================
-  // RETURN / RETUR
-  // ============================================================
-
   static Future<void> returnSale(
     int saleId,
     String adminUser,
@@ -475,10 +490,6 @@ class DB {
       );
     });
   }
-
-  // ============================================================
-  // LAPORAN
-  // ============================================================
 
   static Future<List<Map<String, dynamic>>> bestSelling(
     DateTime from,
@@ -582,141 +593,65 @@ class DB {
     return (rows.first['total'] as num).toInt();
   }
 
-  // ============================================================
-  // LAPORAN HARIAN
-  // ============================================================
-
-  static Future<Map<String, dynamic>> daySummary(
-    DateTime day,
-  ) async {
-    final start = DateTime(
-      day.year,
-      day.month,
-      day.day,
-    );
-
-    final end = start.add(
-      const Duration(days: 1),
-    );
-
-    final db = await database;
-
-    final startText = _dbDate(start);
-    final endText = _dbDate(end);
-
-    final salesRows = await db.query(
-      'sales',
-      where: 'sale_time >= ? AND sale_time < ?',
-      whereArgs: [
-        startText,
-        endText,
-      ],
-      orderBy: 'sale_time DESC',
-    );
-
-    final valid = salesRows
-        .where((x) => x['returned'] != 1)
-        .toList();
-
-    final returned = salesRows
-        .where((x) => x['returned'] == 1)
-        .toList();
-
-    final itemRows = await db.rawQuery(
-      '''
-      SELECT COALESCE(SUM(si.qty),0) jumlah
-      FROM sale_items si
-      INNER JOIN sales s
-        ON s.id=si.sale_id
-      WHERE s.sale_time >= ?
-        AND s.sale_time < ?
-        AND s.returned=0
-      ''',
-      [
-        startText,
-        endText,
-      ],
-    );
-
-    final payments = <String, int>{};
-
-    for (final row in valid) {
-      final payment =
-          row['payment']?.toString() ?? 'Lainnya';
-
-      payments[payment] =
-          (payments[payment] ?? 0) + 1;
-    }
-
-    return {
-      'sales': valid,
-      'returned': returned.length,
-      'omzet': valid.fold<int>(
-        0,
-        (sum, x) =>
-            sum + (x['total'] as num).toInt(),
-      ),
-      'transaksi': valid.length,
-      'item':
-          (itemRows.first['jumlah'] as num).toInt(),
-      'payments': payments,
-    };
-  }
-
-  // ============================================================
-  // STOCK
-  // ============================================================
-
-  static Future<void> saveProduct({
+  static Future<void> saveUser({
     int? id,
-    required String name,
-    required String category,
-    required int price,
-    required int stock,
+    required String username,
+    required String password,
+    required String role,
     required bool active,
   }) async {
     final db = await database;
 
-    if (name.trim().isEmpty) {
+    final cleanUsername = username.trim();
+
+    if (cleanUsername.isEmpty) {
       throw Exception(
-        'Nama menu tidak boleh kosong.',
+        'Username tidak boleh kosong.',
       );
     }
 
-    if (category.trim().isEmpty) {
+    if (password.isEmpty) {
       throw Exception(
-        'Kategori tidak boleh kosong.',
+        'Password tidak boleh kosong.',
       );
     }
 
-    if (price <= 0) {
+    if (role != 'Administrator' &&
+        role != 'Kasir') {
       throw Exception(
-        'Harga harus lebih dari 0.',
+        'Role pengguna tidak valid.',
       );
     }
 
-    if (stock < 0) {
+    final duplicate = await db.query(
+      'users',
+      columns: ['id'],
+      where: 'username=? AND id!=?',
+      whereArgs: [
+        cleanUsername,
+        id ?? -1,
+      ],
+      limit: 1,
+    );
+
+    if (duplicate.isNotEmpty) {
       throw Exception(
-        'Stok tidak boleh negatif.',
+        'Username "$cleanUsername" sudah digunakan.',
       );
     }
 
     final data = {
-      'name': name.trim(),
-      'category': category.trim(),
-      'price': price,
-      'stock': stock,
+      'username': cleanUsername,
+      'password': password,
+      'role': role,
       'active': active ? 1 : 0,
     };
 
     if (id == null) {
-      await db.insert(
-        'products',
-        data,
-      );
+      await db.insert('users', data);
     } else {
       await db.update(
-        'products',
+        'users',
         data,
         where: 'id=?',
         whereArgs: [id],
@@ -724,70 +659,18 @@ class DB {
     }
   }
 
-  static Future<void> deleteProduct(
-    int id,
-  ) async {
+  static Future<Map<String, dynamic>> daySummary(DateTime day) async {
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
     final db = await database;
-
-    await db.update(
-      'products',
-      {'active': 0},
-      where: 'id=?',
-      whereArgs: [id],
-    );
+    final salesRows = await db.query('sales', where: 'sale_time >= ? AND sale_time < ?', whereArgs: [_dbDate(start), _dbDate(end)], orderBy: 'sale_time DESC');
+    final valid = salesRows.where((x) => x['returned'] != 1).toList();
+    final returned = salesRows.where((x) => x['returned'] == 1).toList();
+    final itemRows = await db.rawQuery('SELECT COALESCE(SUM(si.qty),0) jumlah FROM sale_items si INNER JOIN sales s ON s.id=si.sale_id WHERE s.sale_time >= ? AND s.sale_time < ? AND s.returned=0', [_dbDate(start), _dbDate(end)]);
+    final payments = <String,int>{};
+    for (final row in valid) { final p = row['payment']?.toString() ?? 'Lainnya'; payments[p] = (payments[p] ?? 0) + 1; }
+    return {'sales': valid, 'returned': returned.length, 'omzet': valid.fold<int>(0, (sum, x) => sum + (x['total'] as num).toInt()), 'transaksi': valid.length, 'item': (itemRows.first['jumlah'] as num).toInt(), 'payments': payments};
   }
-
-  static Future<void> addStock(
-    int productId,
-    int qty,
-    String note,
-  ) async {
-    if (qty <= 0) {
-      throw Exception(
-        'Jumlah stok harus lebih dari 0.',
-      );
-    }
-
-    final db = await database;
-
-    await db.transaction((txn) async {
-      final product = await txn.query(
-        'products',
-        where: 'id=?',
-        whereArgs: [productId],
-        limit: 1,
-      );
-
-      if (product.isEmpty) {
-        throw Exception(
-          'Produk tidak ditemukan.',
-        );
-      }
-
-      await txn.rawUpdate(
-        'UPDATE products SET stock=stock+? WHERE id=?',
-        [
-          qty,
-          productId,
-        ],
-      );
-
-      await txn.insert(
-        'stock_logs',
-        {
-          'product_id': productId,
-          'time': stamp(),
-          'type': 'MASUK',
-          'qty': qty,
-          'note': note,
-        },
-      );
-    });
-  }
-
-  // ============================================================
-  // BACKUP
-  // ============================================================
 
   static Future<Map<String, dynamic>> backup() async {
     final db = await database;

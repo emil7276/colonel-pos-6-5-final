@@ -14,68 +14,104 @@ class ColonelApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'CP Colonel POS V6.5',
+      title: 'CP POS 6.5',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
         scaffoldBackgroundColor: bg,
         fontFamily: 'Roboto',
-        appBarTheme: AppBarTheme(
+        visualDensity: VisualDensity.standard,
+        appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
-          foregroundColor: scheme.onSurface,
+          foregroundColor: ink,
           elevation: 0,
           centerTitle: false,
+          scrolledUnderElevation: 0,
         ),
-        cardTheme: const CardTheme(
+        cardTheme: CardTheme(
           elevation: 0,
           margin: EdgeInsets.zero,
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(18)),
+            borderRadius: BorderRadius.circular(18),
           ),
-          surfaceTintColor: Colors.white,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 15,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
           ),
-          enabledBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide.none,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: line),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(
-              color: red,
-              width: 1.5,
-            ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: red, width: 1.5),
           ),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             backgroundColor: red,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-              vertical: 14,
-              horizontal: 18,
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+            minimumSize: const Size(0, 50),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+            minimumSize: const Size(0, 48),
+            foregroundColor: ink,
+            side: const BorderSide(color: line),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          indicatorColor: scheme.primaryContainer,
+          height: 72,
+          backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
+          indicatorColor: red.withValues(alpha: .12),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final selected = states.contains(WidgetState.selected);
+            return TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              color: selected ? red : inkMuted,
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            final selected = states.contains(WidgetState.selected);
+            return IconThemeData(
+              color: selected ? red : inkMuted,
+              size: selected ? 25 : 23,
+            );
+          }),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: Colors.white,
+          selectedColor: red.withValues(alpha: .12),
+          side: const BorderSide(color: line),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: line,
+          space: 1,
+          thickness: 1,
         ),
       ),
       home: const LoginPage(),
