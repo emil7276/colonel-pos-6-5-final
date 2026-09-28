@@ -111,26 +111,15 @@ class DB {
         });
 
         final products = [
-          ['Dada', 'Ayam', 12000],
-          ['Paha Atas', 'Ayam', 12000],
-          ['Paha Bawah', 'Ayam', 9000],
-          ['Sayap', 'Ayam', 9000],
-          ['Paket Dada', 'Paket', 15500],
-          ['Paket Paha Atas', 'Paket', 15500],
-          ['Paket Paha Bawah', 'Paket', 12500],
-          ['Paket Sayap', 'Paket', 12500],
-          ['Sambal Geprek', 'Tambahan', 3000],
-          ['Kentang Goreng', 'Tambahan', 8000],
-          ['Air Mineral', 'Minuman', 4000],
-          ['Es Teh', 'Minuman', 4000],
-        ];
+      ['Contoh', 'Contoh', 1000],
+    ];
 
         for (final p in products) {
           await db.insert('products', {
             'name': p[0],
             'category': p[1],
             'price': p[2],
-            'stock': 0,
+            'stock': 1,
             'active': 1,
           });
         }
