@@ -219,6 +219,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
+              ],
+            ),
+          ),
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: selectPage,
