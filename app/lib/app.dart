@@ -39,7 +39,7 @@ class ColonelApp extends StatelessWidget {
           centerTitle: false,
           scrolledUnderElevation: 0,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           margin: EdgeInsets.zero,
           color: Colors.white,
