@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/widgets.dart';
 import '../../data/database.dart';
 
@@ -28,11 +27,41 @@ class _BackupPageState extends State<BackupPage> {
   Future<void> backup() async {
     if(working) return;
     setState(()=>working=true);
+
     try {
-      final file=await makeBackup();
-      await Share.shareXFiles([XFile(file.path)],subject:'Backup CP Colonel POS 6.5');
+      final data = await DB.backup();
+      final bytes = utf8.encode(
+        const JsonEncoder.withIndent('  ').convert(data),
+      );
+
+      final fileName =
+          'colonel_pos_v65_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+
+      final savedPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Simpan Backup CP Colonel POS',
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        bytes: bytes,
+      );
+
+      if (!mounted) return;
+
+      if (savedPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Backup dibatalkan.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Backup berhasil disimpan.')),
+        );
+      }
     } catch(e) {
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Backup gagal: $e')));
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content:Text('Backup gagal: $e')),
+        );
+      }
     } finally {
       if(mounted) setState(()=>working=false);
     }
