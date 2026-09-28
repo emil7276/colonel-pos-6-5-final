@@ -757,7 +757,8 @@ class DB {
     final itemRows = await db.rawQuery('SELECT COALESCE(SUM(si.qty),0) jumlah FROM sale_items si INNER JOIN sales s ON s.id=si.sale_id WHERE s.sale_time >= ? AND s.sale_time < ? AND s.returned=0', [_dbDate(start), _dbDate(end)]);
     final payments = <String,int>{};
     for (final row in valid) { final p = row['payment']?.toString() ?? 'Lainnya'; payments[p] = (payments[p] ?? 0) + 1; }
-    return {'sales': valid, 'returned': returned.length, 'omzet': valid.fold<int>(0, (sum, x) => sum + (x['total'] as num).toInt()), 'transaksi': valid.length, 'item': (itemRows.first['jumlah'] as num).toInt(), 'payments': payments};
+    return {'sales': valid,
+      'returnedSales': returned, 'returned': returned.length, 'omzet': valid.fold<int>(0, (sum, x) => sum + (x['total'] as num).toInt()), 'transaksi': valid.length, 'item': (itemRows.first['jumlah'] as num).toInt(), 'payments': payments};
   }
 
   static Future<Map<String, dynamic>> backup() async {

@@ -18,6 +18,7 @@ class _ReportPageState extends State<ReportPage> {
   int omzet = 0, transaksi = 0, item = 0, retur = 0;
   Map<String,int> payments = {};
   List<SaleModel> sales = [];
+  List<SaleModel> returnedSales = [];
   List<Map<String,dynamic>> best = [], hours = [];
   List<Map<String,dynamic>> customers = [], trend = [];
   int monthSales = 0;
@@ -45,6 +46,7 @@ class _ReportPageState extends State<ReportPage> {
         omzet = summary['omzet'] as int; transaksi = summary['transaksi'] as int; item = summary['item'] as int; retur = summary['returned'] as int;
         payments = Map<String,int>.from(summary['payments'] as Map);
         sales = (summary['sales'] as List).map((e)=>SaleModel.fromMap(e as Map<String,dynamic>)).toList();
+        returnedSales = (summary['returnedSales'] as List).map((e)=>SaleModel.fromMap(e as Map<String,dynamic>)).toList();
         best = b; hours = h; customers = c; monthSales = month; trend = t; loading = false;
       });
     } catch(e) { if (!mounted) return; setState(()=>loading=false); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal memuat laporan: $e'))); }
@@ -63,7 +65,7 @@ class _ReportPageState extends State<ReportPage> {
       const SizedBox(height:16),
       if(loading) const LinearProgressIndicator(minHeight:3),
       const SizedBox(height:8),
-      LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:2.15,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined,onTap:showTransactions),_metric('Item Terjual','$item',Icons.fastfood_outlined,onTap:showItemsSold),_metric('Retur','$retur',Icons.assignment_return_outlined) ]);}),
+      LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:2.15,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined,onTap:showTransactions),_metric('Item Terjual','$item',Icons.fastfood_outlined,onTap:showItemsSold),_metric('Retur','$retur',Icons.assignment_return_outlined,onTap:showReturns) ]);}),
       const SizedBox(height:16),
       _monthSalesCard(),
       _trendCard(),
@@ -349,6 +351,68 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
+  Future<void> showReturns() async {
+    final returned = returnedSales;
+
+    if (returnedSales.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Belum ada transaksi retur pada tanggal ini.')),
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * .72,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Transaksi Retur',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: returned.length,
+                    itemBuilder: (_, i) {
+                      final s = returned[i];
+                      return ListTile(
+                        onTap: () => saleDetail(s),
+                        dense: true,
+                        leading: const Icon(
+                          Icons.assignment_return_outlined,
+                          color: red,
+                        ),
+                        title: Text(
+                          s.no,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: Text('${s.time} • Kasir: ${s.cashier}'),
+                        trailing: const Text(
+                          'RETUR',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Colors.red,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> showTransactions() async {
     if (sales.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -449,7 +513,18 @@ class _ReportPageState extends State<ReportPage> {
           child: Wrap(
             children: [
               Text(s.no, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
-              Text('${s.time} • ${s.cashier}'),
+              Text('${s.time} • Kasir: ${s.cashier}'),
+              if (s.returned)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Chip(
+                      avatar: Icon(Icons.assignment_return_outlined, size: 18),
+                      label: Text('RETUR'),
+                    ),
+                  ),
+                ),
               const Divider(),
               ...items.map((i) => ListTile(
                     dense: true,
