@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../core/widgets.dart';
@@ -23,6 +24,35 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int index = 0;
   final posKey = GlobalKey<PosPageState>();
+
+  String? _quote;
+  Timer? _quoteTimer;
+
+  void showQuote(String quote) {
+    _quoteTimer?.cancel();
+    if (!mounted) return;
+
+    setState(() => _quote = quote);
+
+    _quoteTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() => _quote = null);
+      }
+    });
+  }
+
+  void hideQuote() {
+    _quoteTimer?.cancel();
+    if (mounted) {
+      setState(() => _quote = null);
+    }
+  }
+
+  @override
+  void dispose() {
+    _quoteTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> logout() async {
     Navigator.pushAndRemoveUntil(
@@ -74,7 +104,7 @@ class _HomePageState extends State<HomePage> {
         role: widget.role,
         onQuickAccess: quickAccess,
       ),
-      PosPage(key: posKey, cashier: widget.username),
+      PosPage(key: posKey, cashier: widget.username, onTransactionSuccess: showQuote),
       ReportPage(role: widget.role),
       if (widget.role == 'Administrator') SettingsPage(username: widget.username),
       if (widget.role == 'Administrator') const FinancePage(),
@@ -118,7 +148,68 @@ class _HomePageState extends State<HomePage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: Container(
             color: bg,
-            child: IndexedStack(index: index, children: pages),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: IndexedStack(
+                    index: index,
+                    children: pages,
+                  ),
+                ),
+                if (_quote != null)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    child: Dismissible(
+                      key: ValueKey(_quote),
+                      direction: DismissDirection.horizontal,
+                      onDismissed: (_) => hideQuote(),
+                      child: Material(
+                        elevation: 7,
+                        borderRadius: BorderRadius.circular(14),
+                        color: red,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 13, 8, 13),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 1),
+                                child: Icon(
+                                  Icons.format_quote_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 9),
+                              Expanded(
+                                child: Text(
+                                  _quote!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                onPressed: hideQuote,
+                                icon: const Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

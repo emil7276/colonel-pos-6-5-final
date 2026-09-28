@@ -8,6 +8,8 @@ import 'users_page.dart';
 import 'qris_page.dart';
 import 'backup_page.dart';
 import 'printer_page.dart';
+import 'qa_page.dart';
+import 'contact_page.dart';
 class SettingsPage
     extends StatelessWidget {
   final String username;
@@ -64,6 +66,18 @@ class SettingsPage
           'Backup',
           Icons.backup_outlined,
           const BackupPage(),
+        ),
+        settingsTile(
+          context,
+          'Q&A mengenai aplikasi ini',
+          Icons.help_outline_rounded,
+          const QaPage(),
+        ),
+        settingsTile(
+          context,
+          'Hubungi Kami',
+          Icons.support_agent_rounded,
+          const ContactPage(),
         ),
         const CopyrightFooter(),
       ],

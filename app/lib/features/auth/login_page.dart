@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/utils.dart';
 import '../../core/widgets.dart';
 import '../../data/database.dart';
 import '../home/home_page.dart';
+import 'greeting_page.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -14,6 +16,29 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final user = TextEditingController();
   final pass = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _showGreetingOnce();
+  }
+
+  Future<void> _showGreetingOnce() async {
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyShown =
+        prefs.getBool('cp_first_run_greeting_shown') ?? false;
+
+    if (alreadyShown || !mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const GreetingPage(),
+      ),
+    );
+
+    await prefs.setBool('cp_first_run_greeting_shown', true);
+  }
 
   Future<void> login() async {
     try {

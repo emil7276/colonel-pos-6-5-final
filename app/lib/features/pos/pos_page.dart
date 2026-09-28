@@ -7,12 +7,15 @@ import '../../core/widgets.dart';
 import '../../data/database.dart';
 import '../../models/models.dart';
 import '../../services/receipt_service.dart';
+import '../../services/quote_service.dart';
 class PosPage extends StatefulWidget {
   final String cashier;
+  final ValueChanged<String>? onTransactionSuccess;
 
   const PosPage({
     super.key,
     required this.cashier,
+    this.onTransactionSuccess,
   });
 
   @override
@@ -398,6 +401,17 @@ class PosPageState extends State<PosPage> {
         payment:
             result['method'] as String,
       );
+
+      // Transaksi sudah berhasil tersimpan.
+      // Quote tidak memengaruhi perhitungan transaksi.
+      try {
+        final quote = await QuoteService.nextQuote();
+        if (mounted) {
+          widget.onTransactionSuccess?.call(quote);
+        }
+      } catch (_) {
+        // Jika quote gagal ditampilkan, transaksi tetap dianggap berhasil.
+      }
 
       final db = await DB.database;
 
