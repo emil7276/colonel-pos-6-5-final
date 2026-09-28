@@ -5,6 +5,8 @@ import '../auth/login_page.dart';
 import '../pos/pos_page.dart';
 import '../reports/report_page.dart';
 import '../settings/settings_page.dart';
+import '../settings/menu_page.dart';
+import '../settings/printer_page.dart';
 import 'dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +31,31 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void quickAccess(String action) {
+    switch (action) {
+      case 'transaksi':
+        selectPage(1);
+        break;
+      case 'laporan':
+        selectPage(2);
+        break;
+      case 'produk':
+        if (widget.role != 'Administrator') return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MenuPage()),
+        );
+        break;
+      case 'printer':
+        if (widget.role != 'Administrator') return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PrinterPage()),
+        );
+        break;
+    }
+  }
+
   void selectPage(int value) {
     setState(() => index = value);
     if (value == 1) {
@@ -41,7 +68,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      DashboardPage(username: widget.username),
+      DashboardPage(
+        username: widget.username,
+        role: widget.role,
+        onQuickAccess: quickAccess,
+      ),
       PosPage(key: posKey, cashier: widget.username),
       ReportPage(role: widget.role),
       if (widget.role == 'Administrator') SettingsPage(username: widget.username),

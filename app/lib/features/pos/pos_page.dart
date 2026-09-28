@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/utils.dart';
 import '../../core/widgets.dart';
@@ -253,33 +255,34 @@ class PosPageState extends State<PosPage> {
                   const SizedBox(
                     height: 15,
                   ),
-                  DropdownButtonFormField<
-                      String>(
-                    value: method,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Tunai',
-                        child:
-                            Text('Tunai'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'QRIS',
-                        child:
-                            Text('QRIS'),
-                      ),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) {
-                        setDialog(
-                          () =>
-                              method = v,
-                        );
-                      }
-                    },
-                    decoration:
-                        const InputDecoration(
-                      labelText:
-                          'Metode',
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final x in const [
+                          'Tunai',
+                          'QRIS',
+                          'Transfer',
+                          'Wallet (Platform)',
+                        ])
+                          ChoiceChip(
+                            label: Text(x),
+                            selected: method == x,
+                            onSelected: (_) => setDialog(() => method = x),
+                            selectedColor: redSoft,
+                            labelStyle: TextStyle(
+                              color: method == x ? red : ink,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                            side: BorderSide(
+                              color: method == x ? red : line,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                      ],
                     ),
                   ),
                   if (method ==
@@ -481,6 +484,92 @@ class PosPageState extends State<PosPage> {
     }
   }
 
+  Future<void> showQris() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('qris_image');
+    final merchant = prefs.getString('qris_merchant') ?? '';
+
+    if (path == null || path.isEmpty || !File(path).existsSync()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('QRIS belum diatur oleh Administrator.'),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.all(18),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.qr_code_2_rounded, color: red),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'QRIS Pembayaran',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                if (merchant.trim().isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      merchant,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: inkMuted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                Flexible(
+                  child: InteractiveViewer(
+                    minScale: 0.8,
+                    maxScale: 4,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Tutup'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = category == 'Semua'
@@ -500,10 +589,20 @@ class PosPageState extends State<PosPage> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Pilih Menu',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                      'Transaksi',
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
                     ),
                   ),
+                  OutlinedButton.icon(
+                    onPressed: showQris,
+                    icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                    label: const Text('Tampilkan QRIS'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(width: 7),
                   Text(
                     '${filtered.length} menu',
                     style: const TextStyle(color: inkMuted, fontWeight: FontWeight.w700),
@@ -651,7 +750,7 @@ class PosPageState extends State<PosPage> {
                         itemCount: 3,
                         separatorBuilder: (_, __) => const SizedBox(width: 6),
                         itemBuilder: (_, i) {
-                          const types = ['Retail', 'Online', 'Pedagang'];
+                          const types = ['Retail', 'Online', 'Grosir/Reseller'];
                           final type = types[i];
                           final selected = customerType == type;
                           return ChoiceChip(

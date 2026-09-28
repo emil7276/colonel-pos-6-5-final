@@ -7,7 +7,15 @@ import '../../models/models.dart';
 
 class DashboardPage extends StatefulWidget {
   final String username;
-  const DashboardPage({super.key, required this.username});
+  final String role;
+  final ValueChanged<String>? onQuickAccess;
+
+  const DashboardPage({
+    super.key,
+    required this.username,
+    this.role = 'Kasir',
+    this.onQuickAccess,
+  });
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
@@ -127,10 +135,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 2.25,
                 children: [
-                  _quick('Transaksi Baru', Icons.point_of_sale_rounded),
-                  _quick('Laporan', Icons.analytics_rounded),
-                  _quick('Produk', Icons.restaurant_menu_rounded),
-                  _quick('Printer', Icons.print_rounded),
+                  _quick('Transaksi Baru', Icons.point_of_sale_rounded, 'transaksi'),
+                  _quick('Laporan', Icons.analytics_rounded, 'laporan'),
+                  if (widget.role == 'Administrator')
+                    _quick('Produk', Icons.restaurant_menu_rounded, 'produk'),
+                  if (widget.role == 'Administrator')
+                    _quick('Printer', Icons.print_rounded, 'printer'),
                 ],
               );
             },
@@ -160,31 +170,36 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
 
-  Widget _quick(String title, IconData icon) {
+  Widget _quick(String title, IconData icon, String action) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: redSoft,
-                borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => widget.onQuickAccess?.call(action),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: redSoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: red, size: 20),
               ),
-              child: Icon(icon, color: red, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                ),
               ),
-            ),
-          ],
+              const Icon(Icons.chevron_right_rounded, size: 19, color: inkMuted),
+            ],
+          ),
         ),
       ),
     );
