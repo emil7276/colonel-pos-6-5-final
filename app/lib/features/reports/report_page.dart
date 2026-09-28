@@ -19,6 +19,9 @@ class _ReportPageState extends State<ReportPage> {
   Map<String,int> payments = {};
   List<SaleModel> sales = [];
   List<Map<String,dynamic>> best = [], hours = [];
+  List<Map<String,dynamic>> customers = [], trend = [];
+  int monthSales = 0;
+  String trendMode = 'Hari';
 
   DateTime get start => DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
   DateTime get end => start.add(const Duration(days: 1));
@@ -29,12 +32,20 @@ class _ReportPageState extends State<ReportPage> {
       final summary = await DB.daySummary(selectedDate);
       final b = await DB.bestSelling(start, end);
       final h = await DB.hourly(start, end);
+      final month = await DB.monthOmzet(DateTime.now());
+      final c = await DB.customerSales(start, end);
+      final now = DateTime.now();
+      final t = trendMode == 'Hari'
+          ? await DB.daily(now.subtract(const Duration(days: 29)), now.add(const Duration(days: 1)))
+          : trendMode == 'Bulan'
+              ? await DB.monthlyTrend(DateTime(now.year, now.month - 11, 1), DateTime(now.year, now.month + 1, 1))
+              : await DB.yearlyTrend(DateTime(now.year - 4, 1, 1), DateTime(now.year + 1, 1, 1));
       if (!mounted) return;
       setState(() {
         omzet = summary['omzet'] as int; transaksi = summary['transaksi'] as int; item = summary['item'] as int; retur = summary['returned'] as int;
         payments = Map<String,int>.from(summary['payments'] as Map);
         sales = (summary['sales'] as List).map((e)=>SaleModel.fromMap(e as Map<String,dynamic>)).toList();
-        best = b; hours = h; loading = false;
+        best = b; hours = h; customers = c; monthSales = month; trend = t; loading = false;
       });
     } catch(e) { if (!mounted) return; setState(()=>loading=false); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Gagal memuat laporan: $e'))); }
   }
@@ -54,8 +65,11 @@ class _ReportPageState extends State<ReportPage> {
       const SizedBox(height:8),
       LayoutBuilder(builder:(context,c){final cols=c.maxWidth>=900?4:2; return GridView.count(crossAxisCount:cols,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:2.15,children:[_metric('Omzet',rp(omzet),Icons.payments_outlined),_metric('Transaksi','$transaksi',Icons.receipt_long_outlined,onTap:showTransactions),_metric('Item Terjual','$item',Icons.fastfood_outlined,onTap:showItemsSold),_metric('Retur','$retur',Icons.assignment_return_outlined) ]);}),
       const SizedBox(height:16),
+      _monthSalesCard(),
+      _trendCard(),
+      _customerSection(),
       _paymentSummary(),
-      _section('Menu Terlaris',best.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:best.take(8).map((x)=>ListTile(leading:CircleAvatar(child:Text('${x['qty']}')),title:Text(x['name'].toString()),trailing:Text(rp(x['omzet'] as num),style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
+      _section('Penjualan Berdasarkan Item',best.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:best.take(8).map((x)=>ListTile(leading:CircleAvatar(child:Text('${x['qty']}')),title:Text(x['name'].toString()),trailing:Text(rp(x['omzet'] as num),style:const TextStyle(fontWeight:FontWeight.w700)))).toList()),
       _section('Jam Transaksi',hours.isEmpty?[const ListTile(title:Text('Belum ada penjualan.'))]:hours.take(8).map((x)=>ListTile(leading:const Icon(Icons.schedule_outlined),title:Text('${x['jam']}:00'),trailing:Text('${x['transaksi']} transaksi'))).toList()),
       const SizedBox(height:6),
       const Text('Transaksi Hari Ini',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),
@@ -66,6 +80,130 @@ class _ReportPageState extends State<ReportPage> {
     ]));
   }
 
+
+
+  Widget _monthSalesCard() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(color: redSoft, borderRadius: BorderRadius.circular(14)),
+              child: const Icon(Icons.calendar_month_rounded, color: red),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Penjualan Bulan Ini', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: inkMuted)),
+                  const SizedBox(height: 3),
+                  Text(rp(monthSales), style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: red)),
+                  Text('Omzet bulan berjalan', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _trendCard() {
+    final data = List<Map<String,dynamic>>.from(trend);
+    data.sort((a,b) => (a['periode'] ?? a['tanggal']).toString().compareTo((b['periode'] ?? b['tanggal']).toString()));
+    final max = data.fold<double>(0, (m,x) => ((x['omzet'] as num?)?.toDouble() ?? 0) > m ? (x['omzet'] as num).toDouble() : m);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Grafik Penjualan', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: 3,
+                separatorBuilder: (_, __) => const SizedBox(width: 7),
+                itemBuilder: (_, i) {
+                  const modes = ['Hari','Bulan','Tahun'];
+                  final mode = modes[i];
+                  final selected = trendMode == mode;
+                  return ChoiceChip(
+                    label: Text(mode),
+                    selected: selected,
+                    onSelected: (_) async { setState(() => trendMode = mode); await load(); },
+                    selectedColor: redSoft,
+                    labelStyle: TextStyle(color: selected ? red : ink, fontWeight: FontWeight.w800, fontSize: 12),
+                    side: BorderSide(color: selected ? red : line),
+                    visualDensity: VisualDensity.compact,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (data.isEmpty)
+              const Padding(padding: EdgeInsets.symmetric(vertical: 18), child: Text('Belum ada data penjualan.'))
+            else
+              SizedBox(
+                height: 150,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: data.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) {
+                    final row = data[i];
+                    final value = (row['omzet'] as num).toDouble();
+                    final h = (max <= 0 ? 4.0 : (value / max * 104).clamp(4.0, 104.0).toDouble());
+                    final label = (row['periode'] ?? row['tanggal']).toString();
+                    final short = trendMode == 'Hari' && label.length >= 10 ? label.substring(8) : label;
+                    return SizedBox(
+                      width: trendMode == 'Hari' ? 34 : 58,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(value >= 1000000 ? '${(value/1000000).toStringAsFixed(1)}jt' : value >= 1000 ? '${(value/1000).toStringAsFixed(0)}k' : value.toStringAsFixed(0), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 3),
+                          Container(height: h, decoration: BoxDecoration(color: red, borderRadius: BorderRadius.circular(7))),
+                          const SizedBox(height: 4),
+                          Text(short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _customerSection() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        title: const Text('Penjualan Berdasarkan Pelanggan', style: TextStyle(fontWeight: FontWeight.w900)),
+        children: customers.isEmpty
+            ? [const ListTile(title: Text('Belum ada penjualan pada periode ini.'))]
+            : customers.take(12).map((x) => ListTile(
+                dense: true,
+                leading: CircleAvatar(radius: 17, backgroundColor: redSoft, foregroundColor: red, child: const Icon(Icons.person_outline_rounded, size: 18)),
+                title: Text(x['customer_name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text('${x['customer_type']} • ${x['transaksi']} transaksi'),
+                trailing: Text(rp(x['omzet'] as num), style: const TextStyle(fontWeight: FontWeight.w800)),
+              )).toList(),
+      ),
+    );
+  }
 
   Widget _paymentSummary() {
     final total = payments.values.fold<int>(0, (a, b) => a + b);

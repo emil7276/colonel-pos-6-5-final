@@ -23,6 +23,14 @@ class PosPageState extends State<PosPage> {
 
   String category = 'Semua';
   int discount = 0;
+  String customerType = 'Retail';
+  final TextEditingController customerNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    customerNameController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -374,6 +382,8 @@ class PosPageState extends State<PosPage> {
     try {
       final id = await DB.createSale(
         cashier: widget.cashier,
+        customerName: customerNameController.text,
+        customerType: customerType,
         items: cart,
         subtotal: subtotal,
         discount: discount,
@@ -400,6 +410,8 @@ class PosPageState extends State<PosPage> {
       setState(() {
         cart.clear();
         discount = 0;
+        customerNameController.clear();
+        customerType = 'Retail';
       });
 
       await load();
@@ -616,6 +628,51 @@ class PosPageState extends State<PosPage> {
                 leading: Icon(Icons.shopping_cart_rounded, color: red, size: 20),
                 title: Text('Keranjang', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
               ),
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: customerNameController,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Pelanggan',
+                        hintText: 'Pelanggan umum / nama pelanggan tetap',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    SizedBox(
+                      height: 38,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 3,
+                        separatorBuilder: (_, __) => const SizedBox(width: 6),
+                        itemBuilder: (_, i) {
+                          const types = ['Retail', 'Online', 'Pedagang'];
+                          final type = types[i];
+                          final selected = customerType == type;
+                          return ChoiceChip(
+                            label: Text(type),
+                            selected: selected,
+                            onSelected: (_) => setState(() => customerType = type),
+                            selectedColor: redSoft,
+                            labelStyle: TextStyle(
+                              color: selected ? red : ink,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                            side: BorderSide(color: selected ? red : line),
+                            visualDensity: VisualDensity.compact,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: cart.isEmpty
                     ? const Center(child: Text('Belum ada item'))
@@ -715,7 +772,7 @@ class PosPageState extends State<PosPage> {
           child: Column(
             children: [
               Expanded(flex: 7, child: productGrid),
-              SizedBox(height: cart.isEmpty ? 175 : 235, child: cartPanel),
+              SizedBox(height: cart.isEmpty ? 330 : 390, child: cartPanel),
             ],
           ),
         );

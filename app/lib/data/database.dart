@@ -23,7 +23,7 @@ class DB {
 
     _db = await openDatabase(
       path.join(dir, 'colonel_pos_v64.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE products(
@@ -52,6 +52,8 @@ class DB {
             sale_no TEXT NOT NULL UNIQUE,
             sale_time TEXT NOT NULL,
             cashier TEXT NOT NULL,
+            customer_name TEXT NOT NULL DEFAULT 'Pelanggan Umum',
+            customer_type TEXT NOT NULL DEFAULT 'Retail',
             subtotal INTEGER NOT NULL,
             discount INTEGER NOT NULL,
             total INTEGER NOT NULL,
@@ -121,6 +123,16 @@ class DB {
             'stock': 0,
             'active': 1,
           });
+        }
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE sales ADD COLUMN customer_name TEXT NOT NULL DEFAULT 'Pelanggan Umum'",
+          );
+          await db.execute(
+            "ALTER TABLE sales ADD COLUMN customer_type TEXT NOT NULL DEFAULT 'Retail'",
+          );
         }
       },
     );
@@ -286,6 +298,8 @@ class DB {
 
   static Future<int> createSale({
     required String cashier,
+    required String customerName,
+    required String customerType,
     required List<CartLine> items,
     required int subtotal,
     required int discount,
@@ -358,6 +372,8 @@ class DB {
           'sale_no': no,
           'sale_time': stamp(),
           'cashier': cashier,
+          'customer_name': customerName.trim().isEmpty ? 'Pelanggan Umum' : customerName.trim(),
+          'customer_type': customerType,
           'subtotal': subtotal,
           'discount': discount,
           'total': total,
@@ -567,6 +583,78 @@ class DB {
         _dbDate(from),
         _dbDate(to),
       ],
+    );
+  }
+
+
+  static Future<List<Map<String, dynamic>>> customerSales(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT
+        COALESCE(NULLIF(customer_name,''),'Pelanggan Umum') customer_name,
+        COALESCE(NULLIF(customer_type,''),'Retail') customer_type,
+        COUNT(*) transaksi,
+        COALESCE(SUM(total),0) omzet
+      FROM sales
+      WHERE sale_time >= ?
+        AND sale_time < ?
+        AND returned=0
+      GROUP BY customer_name, customer_type
+      ORDER BY omzet DESC
+      ''',
+      [_dbDate(from), _dbDate(to)],
+    );
+  }
+
+  static Future<int> monthOmzet(DateTime date) async {
+    final from = DateTime(date.year, date.month, 1);
+    final to = DateTime(date.year, date.month + 1, 1);
+    return omzet(from, to);
+  }
+
+  static Future<List<Map<String, dynamic>>> monthlyTrend(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT substr(sale_time,1,7) periode,
+             COUNT(*) transaksi,
+             COALESCE(SUM(total),0) omzet
+      FROM sales
+      WHERE sale_time >= ?
+        AND sale_time < ?
+        AND returned=0
+      GROUP BY periode
+      ORDER BY periode
+      ''',
+      [_dbDate(from), _dbDate(to)],
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> yearlyTrend(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT substr(sale_time,1,4) periode,
+             COUNT(*) transaksi,
+             COALESCE(SUM(total),0) omzet
+      FROM sales
+      WHERE sale_time >= ?
+        AND sale_time < ?
+        AND returned=0
+      GROUP BY periode
+      ORDER BY periode
+      ''',
+      [_dbDate(from), _dbDate(to)],
     );
   }
 
